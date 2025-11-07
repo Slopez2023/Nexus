@@ -52,7 +52,7 @@
 ## 🏗️ Architecture
 - **nexus/core/**: Data pipeline, execution, configuration
 - **nexus/strategies/**: Trading strategy implementations
-- **nexus/backtesting/**: Strategy validation engine
+- **nexus/backtesting/**: Advanced strategy validation engine (walk-forward analysis, Monte Carlo simulation, multi-regime testing, holdout validation)
 - **nexus/risk/**: Risk management and position sizing
 - **nexus/monitoring/**: Performance tracking and analytics
 - **nexus/agents/**: AI-powered analysis agents

@@ -197,6 +197,16 @@ class BacktestResult:
 
 
 @dataclass
+class OptimizationResult:
+    """Results from parameter optimization."""
+    best_parameters: Dict[str, Any]
+    best_performance: Any  # PerformanceMetrics
+    all_results: List[Any]  # List of result objects
+    optimization_method: str
+    metric_used: str
+
+
+@dataclass
 class WalkForwardResult:
     """Results from walk-forward optimization."""
     config: BacktestConfig

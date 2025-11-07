@@ -38,10 +38,16 @@ from .engine import BacktestEngine, MarketDataAdapter
 from .simulator import PortfolioSimulator
 from .costs import TransactionCostModel, create_realistic_cost_model
 from .analyzer import PerformanceAnalyzer
+from .validator import StatisticalValidator, MonteCarloResult
+from .walk_forward import WalkForwardAnalyzer, WalkForwardResult
+from .regime_validator import RegimeValidator, RegimeValidationResult
+from .holdout_validator import HoldoutValidator, HoldoutValidationResult
+from .comprehensive_report import ComprehensiveReportGenerator, ComprehensiveValidationReport
+from .validation_runner import ValidationRunner
 from .models import (
     BacktestConfig, BacktestResult, PortfolioState, Position, Trade,
     TradeSide, TradeCost, PerformanceMetrics, SignificanceTest,
-    CostConfig, RiskLimits
+    CostConfig, RiskLimits, WalkForwardResult, MonteCarloResult
 )
 
 __all__ = [
@@ -51,6 +57,12 @@ __all__ = [
     "TransactionCostModel",
     "create_realistic_cost_model",
     "PerformanceAnalyzer",
+    "StatisticalValidator",
+    "WalkForwardAnalyzer",
+    "RegimeValidator",
+    "HoldoutValidator",
+    "ComprehensiveReportGenerator",
+    "ValidationRunner",
     "BacktestConfig",
     "BacktestResult",
     "PortfolioState",
@@ -60,6 +72,11 @@ __all__ = [
     "TradeCost",
     "PerformanceMetrics",
     "SignificanceTest",
+    "WalkForwardResult",
+    "MonteCarloResult",
+    "RegimeValidationResult",
+    "HoldoutValidationResult",
+    "ComprehensiveValidationReport",
     "CostConfig",
     "RiskLimits"
 ]

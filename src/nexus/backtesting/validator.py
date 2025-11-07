@@ -6,6 +6,7 @@ performance is statistically significant and not due to random chance.
 
 from typing import List, Optional, Dict, Any
 import logging
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 import numpy as np
 import pandas as pd
@@ -139,8 +140,29 @@ class StatisticalValidator:
         else:
             raise ValueError(f"Unknown correction method: {method}")
 
+    def _run_single_simulation(self, strategy_returns: pd.Series, seed: int) -> Dict[str, float]:
+        """Run a single Monte Carlo simulation iteration."""
+        np.random.seed(seed)
+        sample = strategy_returns.sample(n=len(strategy_returns), replace=True)
+
+        # Calculate metrics
+        total_return = (1 + sample).prod() - 1
+        sharpe = sample.mean() / sample.std() * np.sqrt(252) if sample.std() > 0 else 0.0
+
+        # Max drawdown
+        cum_returns = (1 + sample).cumprod()
+        rolling_max = cum_returns.expanding().max()
+        drawdowns = (cum_returns - rolling_max) / rolling_max
+        max_dd = abs(drawdowns.min()) if len(drawdowns) > 0 else 0.0
+
+        return {
+            'total_return': total_return,
+            'sharpe_ratio': sharpe,
+            'max_drawdown': max_dd
+        }
+
     def monte_carlo_simulation(self, strategy_returns: pd.Series,
-                             n_simulations: int = 1000) -> MonteCarloResult:
+                              n_simulations: int = 10000) -> MonteCarloResult:
         """Monte Carlo robustness testing.
 
         Args:
@@ -163,29 +185,27 @@ class StatisticalValidator:
                 confidence_intervals={}
             )
 
-        np.random.seed(42)  # Reproducible results
+        np.random.seed(42)  # Base seed for reproducible results
 
+        # Use parallel processing for performance
+        max_workers = min(8, n_simulations)  # Limit workers to avoid overhead
         return_dist = []
         sharpe_dist = []
         max_dd_dist = []
 
-        for _ in range(n_simulations):
-            # Bootstrap sample
-            sample = strategy_returns.sample(n=len(strategy_returns), replace=True)
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+            # Submit all simulation tasks
+            futures = [
+                executor.submit(self._run_single_simulation, strategy_returns, seed)
+                for seed in range(42, 42 + n_simulations)
+            ]
 
-            # Calculate metrics
-            total_return = (1 + sample).prod() - 1
-            sharpe = sample.mean() / sample.std() * np.sqrt(252) if sample.std() > 0 else 0.0
-
-            # Max drawdown
-            cum_returns = (1 + sample).cumprod()
-            rolling_max = cum_returns.expanding().max()
-            drawdowns = (cum_returns - rolling_max) / rolling_max
-            max_dd = abs(drawdowns.min()) if len(drawdowns) > 0 else 0.0
-
-            return_dist.append(total_return)
-            sharpe_dist.append(sharpe)
-            max_dd_dist.append(max_dd)
+            # Collect results as they complete
+            for future in as_completed(futures):
+                result = future.result()
+                return_dist.append(result['total_return'])
+                sharpe_dist.append(result['sharpe_ratio'])
+                max_dd_dist.append(result['max_drawdown'])
 
         # Convert to numpy arrays
         return_dist = np.array(return_dist)
@@ -199,19 +219,28 @@ class StatisticalValidator:
         var_95 = np.percentile(return_dist, 5)  # 5th percentile = 95% VaR
         cvar_95 = return_dist[return_dist <= var_95].mean() if np.any(return_dist <= var_95) else var_95
 
-        # Confidence intervals
-        ci_level = self.confidence_level
-        ci_lower = (1 - ci_level) / 2
-        ci_upper = 1 - ci_lower
+        # Enhanced confidence intervals at multiple levels
+        confidence_levels = [0.90, 0.95, 0.99]
+        confidence_intervals = {}
 
-        confidence_intervals = {
-            'return': (np.percentile(return_dist, ci_lower * 100),
-                      np.percentile(return_dist, ci_upper * 100)),
-            'sharpe': (np.percentile(sharpe_dist, ci_lower * 100),
-                      np.percentile(sharpe_dist, ci_upper * 100)),
-            'max_drawdown': (np.percentile(max_dd_dist, ci_lower * 100),
-                            np.percentile(max_dd_dist, ci_upper * 100))
-        }
+        for level in confidence_levels:
+            ci_lower = (1 - level) / 2
+            ci_upper = 1 - ci_lower
+            level_key = f"{int(level * 100)}_ci"
+
+            confidence_intervals[level_key] = {
+                'return': (np.percentile(return_dist, ci_lower * 100),
+                          np.percentile(return_dist, ci_upper * 100)),
+                'sharpe': (np.percentile(sharpe_dist, ci_lower * 100),
+                          np.percentile(sharpe_dist, ci_upper * 100)),
+                'max_drawdown': (np.percentile(max_dd_dist, ci_lower * 100),
+                                np.percentile(max_dd_dist, ci_upper * 100))
+            }
+
+        # Standard 95% CI for backward compatibility
+        confidence_intervals['return'] = confidence_intervals['95_ci']['return']
+        confidence_intervals['sharpe'] = confidence_intervals['95_ci']['sharpe']
+        confidence_intervals['max_drawdown'] = confidence_intervals['95_ci']['max_drawdown']
 
         return MonteCarloResult(
             n_simulations=n_simulations,
