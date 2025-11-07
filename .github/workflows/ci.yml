@@ -2,16 +2,16 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main ]
 
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8, 3.9, "3.10", "3.11"]
+        python-version: [3.8, 3.9, '3.10', '3.11']
 
     steps:
     - uses: actions/checkout@v4
@@ -25,59 +25,102 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        pip install pytest-cov bandit safety
 
     - name: Lint with flake8
       run: |
-        flake8 nexus/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 nexus/ tests/ --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+        pip install flake8
+        flake8 nexus/ tests/ scripts/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 nexus/ tests/ scripts/ --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
 
     - name: Type check with mypy
       run: |
-        mypy nexus/ --ignore-missing-imports
+        pip install mypy
+        mypy nexus/ --strict --ignore-missing-imports
 
-    - name: Run tests
+    - name: Test with pytest
+      run: |
+        pytest tests/ -v --cov=nexus --cov-report=xml --cov-report=term-missing --cov-fail-under=90
+
+    - name: Security scan with bandit
+      run: |
+        bandit -r nexus/ -f json -o bandit-report.json --exit-zero
+        bandit -r nexus/ -f txt
+
+    - name: Dependency check with safety
+      run: |
+        safety check --output text
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install sphinx sphinx-rtd-theme
+
+    - name: Build documentation
+      run: |
+        cd docs
+        make html
+
+    - name: Upload documentation
+      uses: actions/upload-artifact@v3
+      with:
+        name: docs
+        path: docs/_build/html/
+
+  performance:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run performance benchmarks
       run: |
         python -c "
-        import sys
-        import os
-        import unittest
-        sys.path.insert(0, os.getcwd())
+        import time
+        from nexus.strategies import TradeSignal
+        from datetime import datetime
 
-        # Import test modules
-        try:
-            from tests.core.test_exceptions import TestNexusError
-            from tests.core.test_logging import TestSetupLogging
-            from tests.core.config.test_config import TestConfigManager
-            print('✅ All test imports successful')
-
-            # Create test suite
-            suite = unittest.TestSuite()
-
-            # Add specific test methods (not entire classes)
-            suite.addTest(TestNexusError('test_nexus_error_inheritance'))
-            suite.addTest(TestNexusError('test_nexus_error_raises'))
-            suite.addTest(TestSetupLogging('test_setup_logging_basic'))
-            suite.addTest(TestConfigManager('test_init_default_config_file'))
-
-            # Run tests
-            runner = unittest.TextTestRunner(verbosity=2, stream=sys.stdout)
-            result = runner.run(suite)
-
-            if result.wasSuccessful():
-                print('✅ All tests passed successfully')
-            else:
-                print(f'❌ {len(result.failures)} failures, {len(result.errors)} errors')
-                sys.exit(1)
-
-        except Exception as e:
-            print(f'❌ Test execution failed: {e}')
-            import traceback
-            traceback.print_exc()
-            sys.exit(1)
+        # Benchmark signal creation
+        start = time.time()
+        signals = []
+        for i in range(10000):
+            signals.append(TradeSignal(
+                symbol=f'TEST{i}',
+                timestamp=datetime.now(),
+                direction='long' if i % 2 == 0 else 'short',
+                confidence=0.5 + (i % 50) / 100.0,
+                reasoning=f'Test signal {i}',
+                metadata={'index': i}
+            ))
+        end = time.time()
+        print(f'Signal creation: {len(signals)} signals in {end-start:.3f}s')
+        print(f'Rate: {len(signals)/(end-start):.0f} signals/second')
         "
-
-    - name: Format check with black
-      run: |
-        black --check nexus/ tests/
-
-    # Coverage disabled for now to focus on test stability

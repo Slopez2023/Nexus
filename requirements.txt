@@ -4,6 +4,10 @@ mypy
 pytest
 pytest-cov
 pytest-asyncio
+bandit
+safety
+sphinx
+sphinx-rtd-theme
 pandas
 requests
 aiohttp
