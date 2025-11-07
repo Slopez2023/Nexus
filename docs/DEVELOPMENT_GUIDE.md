@@ -2,16 +2,22 @@
 
 ## 📋 **Project Overview**
 
-NEXUS is an AI-powered algorithmic trading system built with Python. This guide ensures consistent development, testing, and deployment across all environments.
+**Phase 1 Complete**: NEXUS has a professional infrastructure foundation with PostgreSQL database, RESTful API, type-safe configuration, monitoring, and automated testing.
+
+**Current Status**: Infrastructure ready, preparing for Phase 2 (trading strategies).
+
+**Architecture**: Python 3.11+ with FastAPI, PostgreSQL, Redis, Docker containerization.
 
 ## 🚀 **Quick Start**
 
 ### **Prerequisites**
-- Python 3.8+ (tested on 3.8, 3.9, 3.10, 3.11)
-- Git
-- Virtual environment tool (venv recommended)
+- **Python 3.11+** (required for full feature support)
+- **PostgreSQL 15+** (local or Docker)
+- **Docker & Docker Compose** (recommended for infrastructure)
+- **Git** for version control
+- **4GB+ RAM** recommended
 
-### **Initial Setup**
+### **Development Setup**
 ```bash
 # Clone repository
 git clone https://github.com/Slopez2023/Nexus.git
@@ -19,370 +25,268 @@ cd nexus/new_project
 
 # Create virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Verify installation
-python -c "import nexus; print('✅ NEXUS installed successfully')"
+# Option 1: Docker infrastructure (recommended)
+docker-compose up -d
+
+# Option 2: Local PostgreSQL
+brew install postgresql@15  # macOS
+brew services start postgresql@15
+createdb nexus_trading
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your API keys
+
+# Initialize database
+psql -d nexus_trading -f database_schema.sql
+
+# Verify setup
+python -c "from nexus.core.database import init_database; db = init_database(); print('✅ NEXUS ready!')"
+```
+
+### **Alternative: Full Docker Setup**
+```bash
+# Run everything in containers
+docker-compose -f docker-compose.full.yml up -d
+
+# Access services
+docker-compose exec postgres psql -U nexus_user -d nexus_trading
 ```
 
 ## 🧪 **Testing**
 
-### **Run All Tests**
+### **Comprehensive Test Suite**
 ```bash
-# Run complete test suite
-python -m pytest tests/ -v
+# Run all tests with coverage
+pytest tests/ -v --cov=nexus --cov-report=html --cov-report=term
 
-# Or use the CI-compatible method
+# Run specific component tests
+pytest tests/core/test_config_manager.py -v    # Configuration tests
+pytest tests/core/test_data_api.py -v          # API tests
+pytest tests/core/ -v                          # All core tests
+
+# Run with performance profiling
+pytest tests/ --durations=10 --cov=nexus
+```
+
+### **Database Testing**
+```bash
+# Create isolated test database
+python scripts/manage_config.py generate testing --output config.testing.json
+python nexus/core/test_database.py create --schema database_schema.sql
+
+# Run database-specific tests
+pytest tests/ -k "database" -v
+```
+
+### **Integration Testing**
+```bash
+# Test full system integration
 python -c "
-import unittest
-import sys, os
-sys.path.insert(0, os.getcwd())
+from nexus.core.database import init_database
+from nexus.monitoring.health_monitor import HealthMonitor
 
-from tests.core.test_exceptions import TestNexusError
-from tests.core.test_logging import TestSetupLogging
-from tests.core.config.test_config import TestConfigManager
+# Test database connection
+db = init_database()
+health = db.health_check()
+print(f'Database: {health}')
 
-suite = unittest.TestSuite()
-suite.addTest(TestNexusError('test_nexus_error_inheritance'))
-suite.addTest(TestNexusError('test_nexus_error_raises'))
-suite.addTest(TestSetupLogging('test_setup_logging_basic'))
-suite.addTest(TestConfigManager('test_init_default_config_file'))
-
-runner = unittest.TextTestRunner(verbosity=2)
-result = runner.run(suite)
+# Test monitoring system
+monitor = HealthMonitor()
+system_health = monitor.perform_full_health_check()
+print(f'System Health: {system_health.status.value}')
 "
 ```
 
 ### **Test Coverage Requirements**
-- **Minimum Coverage**: 80% (currently 95%+)
-- **Critical Paths**: All data pipeline, config management, exception handling
-- **CI/CD**: Tests must pass on Python 3.8, 3.9, 3.10, 3.11
+- **Current Coverage**: 30%+ (expanding with Phase 2)
+- **Critical Paths**: All infrastructure, configuration, database operations
+- **CI/CD**: Automated testing on merge requests
+- **Performance**: <100ms for cached operations, <2s for fresh data
 
 ## 🔍 **Code Quality**
 
-### **Linting**
+### **Linting & Formatting**
 ```bash
-# Run flake8 linter
-flake8 nexus/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
-flake8 nexus/ tests/ --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
-
-# Fix common issues
-black nexus/ tests/
-```
-
-### **Type Checking**
-```bash
-# Run mypy
+# Automated code quality checks
+flake8 nexus/ tests/ scripts/ --max-line-length=88
+black nexus/ tests/ scripts/ --check
 mypy nexus/ --ignore-missing-imports
+
+# Auto-fix formatting
+black nexus/ tests/ scripts/
 ```
 
-### **Pre-commit Checks**
+### **Security Scanning**
 ```bash
-# Run all quality checks before committing
-black --check nexus/ tests/
-flake8 nexus/ tests/
-mypy nexus/ --ignore-missing-imports
-python -m pytest tests/ -v
-```
-
-## 📁 **Project Structure**
-
-```
-nexus/
-├── core/
-│   ├── config/          # Configuration management
-│   ├── data/           # Multi-source data pipeline
-│   ├── exceptions.py   # Custom exception classes
-│   └── logging.py      # Logging utilities
-├── agents/             # AI agent implementations
-├── backtesting/        # Backtesting engine
-├── monitoring/         # Performance monitoring
-├── risk/              # Risk management
-└── strategies/        # Trading strategies
-
-tests/                 # Test suite
-├── core/             # Core functionality tests
-├── integration/      # Integration tests
-├── statistical/      # Statistical validation tests
-└── conftest.py       # Test configuration
-
-docs/                 # Documentation
-├── DEVELOPMENT_GUIDE.md  # This file
-├── PHASE1_IMPLEMENTATION.md
-└── ROADMAP.md
-
-.github/workflows/    # CI/CD pipelines
-├── ci.yml           # Main CI pipeline
-└── ...
-```
-
-## ⚙️ **Configuration**
-
-### **Environment Variables**
-```bash
-# Copy and customize
-cp .env.example .env
-
-# Edit with your API keys
-nano .env
-```
-
-### **Required API Keys (Phase 1.1)**
-```bash
-# Primary data source (Massive.com/Polygon.io)
-MASSIVE_API_KEY=your_key_here
-
-# AI analysis (choose one)
-DEEPSEEK_KEY=your_deepseek_key
-OPENROUTER_API_KEY=your_openrouter_key
-
-# Free supplementary data
-COINGECKO_API_KEY=your_coingecko_key
-```
-
-### **Optional API Keys (Future Phases)**
-```bash
-# Trading execution
-ALPACA_PAPER_API_KEY=your_alpaca_key
-KRAKEN_API_KEY=your_kraken_key
-
-# Additional AI providers
-ANTHROPIC_KEY=your_claude_key
-OPENAI_KEY=your_openai_key
+# Security vulnerability checks
+bandit -r nexus/ -f json -o security_report.json
+safety check --output text
 ```
 
 ## 🏗️ **Development Workflow**
 
-### **Feature Development**
-1. **Create Feature Branch**
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-
-2. **Implement Changes**
-   - Write tests first (TDD approach)
-   - Implement functionality
-   - Ensure all tests pass
-
-3. **Code Quality**
-   ```bash
-   black nexus/ tests/
-   flake8 nexus/ tests/
-   mypy nexus/ --ignore-missing-imports
-   ```
-
-4. **Testing**
-   ```bash
-   python -m pytest tests/ -v --cov=nexus
-   ```
-
-5. **Commit & Push**
-   ```bash
-   git add .
-   git commit -m "feat: add your feature description"
-   git push origin feature/your-feature-name
-   ```
-
-### **Pull Request Process**
-1. **Create PR** with descriptive title and description
-2. **CI/CD** must pass all checks
-3. **Code Review** required
-4. **Merge** only after approval
-
-## 🚨 **Common Issues & Solutions**
-
-### **Import Errors**
+### **Daily Development Cycle**
 ```bash
-# Symptom: ModuleNotFoundError
-# Solution: Install dependencies
-pip install -r requirements.txt
+# 1. Pull latest changes
+git pull origin main
 
-# Or activate virtual environment
-source venv/bin/activate
+# 2. Create feature branch
+git checkout -b feature/your-feature-name
+
+# 3. Make changes with tests
+# ... development work ...
+
+# 4. Run quality checks
+pytest tests/ -v
+black nexus/ tests/ scripts/
+flake8 nexus/ tests/ scripts/
+
+# 5. Commit with conventional format
+git add .
+git commit -m "feat: add new feature description"
+
+# 6. Push and create PR
+git push origin feature/your-feature-name
 ```
 
-### **Test Failures**
+### **Configuration Management**
 ```bash
-# Symptom: Tests failing on CI but passing locally
-# Solution: Check Python version compatibility
-python --version
+# View current configuration
+python scripts/manage_config.py show
 
-# Run tests with verbose output
-python -m pytest tests/ -v -s
+# Update configuration safely
+python scripts/manage_config.py update database.port 5433 --user "developer_name"
+
+# Validate configuration
+python scripts/manage_config.py validate
 ```
 
-### **API Key Issues**
+### **System Monitoring**
 ```bash
-# Symptom: External API calls failing
-# Solution: Check .env file configuration
-cat .env | grep -E "(API_KEY|KEY)="
+# Health check
+python scripts/monitor_system.py
 
-# Verify API keys are set
-python -c "import os; print('Keys configured:', bool(os.getenv('MASSIVE_API_KEY')))"
+# Continuous monitoring
+python scripts/monitor_system.py --continuous --interval 60
+
+# Database backup
+python scripts/backup_database.py create --type full
 ```
 
-### **CI/CD Pipeline Issues**
-```bash
-# Symptom: GitHub Actions failing
-# Solution: Check workflow syntax
-python -c "import yaml; yaml.safe_load(open('.github/workflows/ci.yml'))"
+## 🚀 **API Development**
 
-# Test locally first
-python -c "import unittest; unittest.main(module='tests', exit=False)"
+### **Data API Usage**
+```bash
+# Start API server
+python run_api.py
+
+# API endpoints available at http://127.0.0.1:8000
+# OpenAPI docs at http://127.0.0.1:8000/docs
+
+# Example API calls
+curl "http://127.0.0.1:8000/api/v1/data/AAPL?start_date=2024-01-01&end_date=2024-01-02"
+curl "http://127.0.0.1:8000/api/v1/health"
+curl "http://127.0.0.1:8000/api/v1/sources"
+```
+
+## 🐳 **Docker Development**
+
+### **Containerized Workflow**
+```bash
+# Start infrastructure
+docker-compose up -d
+
+# Run tests in container
+docker-compose exec nexus pytest tests/ -v
+
+# View logs
+docker-compose logs -f postgres
+docker-compose logs -f redis
+
+# Access database
+docker-compose exec postgres psql -U nexus_user -d nexus_trading
+
+# Clean up
+docker-compose down -v  # Remove volumes too
 ```
 
 ## 📊 **Performance Monitoring**
 
-### **Test Performance**
-```bash
-# Time individual tests
-python -m pytest tests/ --durations=10
+### **Built-in Metrics**
+- **API Response Times**: Tracked automatically
+- **Database Query Performance**: Connection pooling metrics
+- **Cache Hit Rates**: Redis performance monitoring
+- **System Resources**: CPU, memory, disk usage
 
-# Profile code performance
-python -c "
-import cProfile
-from nexus.core.data import DataManager
-cProfile.run('DataManager()')
-"
+## 🔧 **Troubleshooting**
+
+### **Common Issues**
+
+#### **Database Connection Failed**
+```bash
+# Check if PostgreSQL is running
+brew services list | grep postgresql
+
+# Or with Docker
+docker-compose ps
+
+# Reset database
+psql postgres -c "DROP DATABASE nexus_trading;"
+createdb nexus_trading
+psql -d nexus_trading -f database_schema.sql
 ```
 
-### **Memory Usage**
+#### **Configuration Errors**
 ```bash
-# Check memory usage during tests
-python -m pytest tests/ --mem-usage
+# Validate configuration
+python scripts/manage_config.py validate
 
-# Monitor data pipeline memory
-python -c "
-import psutil
-import os
-from nexus.core.data import DataManager
+# Check environment variables
+env | grep -E "(DB_|API_|LOG_)"
 
-process = psutil.Process(os.getpid())
-initial_mem = process.memory_info().rss / 1024 / 1024
-
-manager = DataManager()
-final_mem = process.memory_info().rss / 1024 / 1024
-
-print(f'Memory usage: {final_mem - initial_mem:.2f} MB')
-"
+# Reset configuration
+cp .env.example .env
+# Edit .env with correct values
 ```
 
-## 🔒 **Security Checklist**
-
-### **Before Committing**
-- [ ] No API keys in code (use environment variables)
-- [ ] No sensitive data logged
-- [ ] `.env` file not committed
-- [ ] All secrets properly encrypted
-
-### **Environment Security**
-- [ ] Use virtual environments
-- [ ] Rotate API keys regularly
-- [ ] Use HTTPS for all external calls
-- [ ] Implement rate limiting
-
-## 📚 **Documentation Updates**
-
-### **When to Update Docs**
-- [ ] New features implemented
-- [ ] API changes
-- [ ] Configuration changes
-- [ ] New dependencies added
-- [ ] Security updates
-
-### **Documentation Files**
-- `README.md` - Project overview and setup
-- `docs/ROADMAP.md` - Development roadmap
-- `docs/DEVELOPMENT_GUIDE.md` - This file
-- `docs/PHASE1_IMPLEMENTATION.md` - Implementation details
-
-## 🚀 **Deployment**
-
-### **Local Deployment**
+#### **Test Failures**
 ```bash
-# Ensure all dependencies installed
-pip install -r requirements.txt
+# Run specific failing test
+pytest tests/core/test_config_manager.py::TestConfigManager::test_specific_method -v -s
 
-# Run basic health check
-python -c "
-from nexus.core.data import DataManager
-from nexus.core.config import ConfigManager
-
-print('✅ NEXUS core modules loaded successfully')
-manager = DataManager()
-config = ConfigManager()
-print('✅ Data pipeline and configuration ready')
-"
+# Debug with pdb
+pytest tests/ --pdb --tb=short
 ```
 
-### **CI/CD Deployment**
-- Automatic on push to `main` branch
-- Tests run on Python 3.8, 3.9, 3.10, 3.11
-- Code quality checks enforced
-- Documentation automatically updated
+## 📚 **Architecture Guidelines**
 
-## 📞 **Support & Troubleshooting**
-
-### **Getting Help**
-1. **Check this guide first**
-2. **Run diagnostic commands**
-3. **Check GitHub Issues**
-4. **Review CI/CD logs**
-
-### **Diagnostic Commands**
-```bash
-# Full system check
-python -c "
-import sys
-print(f'Python: {sys.version}')
-try:
-    import nexus
-    print('✅ NEXUS import successful')
-except ImportError as e:
-    print(f'❌ NEXUS import failed: {e}')
-
-try:
-    from nexus.core.data import DataManager
-    print('✅ Data pipeline available')
-except ImportError as e:
-    print(f'❌ Data pipeline failed: {e}')
-"
-
-# Environment check
-echo "Virtual environment: $VIRTUAL_ENV"
-echo "Python path: $PYTHONPATH"
-echo "Working directory: $(pwd)"
+### **Code Organization**
+```
+nexus/
+├── core/                 # Infrastructure layer
+│   ├── config_manager.py # ✅ Type-safe configuration
+│   ├── database.py      # ✅ Connection management
+│   ├── data_api.py      # ✅ RESTful API
+│   └── logging_config.py # ✅ Enhanced logging
+├── monitoring/          # ✅ Health monitoring
+├── scripts/             # ✅ Management utilities
+└── tests/               # ✅ Comprehensive testing
 ```
 
-## 🎯 **Success Metrics**
-
-### **Development Quality**
-- ✅ All tests passing on CI/CD
-- ✅ Code coverage >80%
-- ✅ No linting errors
-- ✅ Type checking passes
-
-### **Performance Standards**
-- ✅ Test execution <30 seconds
-- ✅ Memory usage <100MB during testing
-- ✅ No external API calls in test suite
-
-### **Maintainability**
-- ✅ Clear documentation
-- ✅ Modular architecture
-- ✅ Consistent code style
-- ✅ Proper error handling
+### **Design Patterns Used**
+- **Factory Pattern**: Data source creation
+- **Observer Pattern**: Health monitoring alerts
+- **Context Manager**: Safe database connections
+- **Strategy Pattern**: Configurable algorithms
+- **Repository Pattern**: Data access abstraction
 
 ---
 
-## 📝 **Change Log**
-
-- **v1.0.0** - Initial Phase 1.1 implementation
-- **CI/CD fixes** - unittest migration, cross-platform compatibility
-- **Documentation** - Comprehensive development guide
-
-**Last Updated:** November 2025
-**Maintainer:** NEXUS Development Team
+**Phase 1 Infrastructure: Complete** ✅
+**Ready for Phase 2: Trading Logic Development** 🚀

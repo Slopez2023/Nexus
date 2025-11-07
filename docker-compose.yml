@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: nexus_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: nexus_trading
+      POSTGRES_USER: nexus_user
+      POSTGRES_PASSWORD: nexus_secure_2024!
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexus_user -d nexus_trading"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    container_name: nexus_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # NEXUS Application (for later when we add web interface)
+  # nexus:
+  #   build: .
+  #   container_name: nexus_app
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8000:8000"
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   environment:
+  #     - DB_HOST=postgres
+  #     - DB_PASSWORD=nexus_secure_2024!
+  #     - REDIS_URL=redis://redis:6379
+  #   volumes:
+  #     - .:/app
+  #     - ./logs:/app/logs
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  default:
+    name: nexus_network

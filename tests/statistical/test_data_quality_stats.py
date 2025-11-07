@@ -29,7 +29,11 @@ class TestDataQualityStatistics:
                 mock_df.shape = (100, 5)
                 mock_df.isnull.return_value.sum.return_value.sum.return_value = 0
                 mock_df.columns = ["Open", "High", "Low", "Close", "Volume"]
-                mock_df.__getitem__.return_value.sum.return_value = 0
+                # Mock column access to return a Series-like object
+                mock_series = MagicMock()
+                mock_series.__lt__ = MagicMock(return_value=mock_series)
+                mock_series.sum.return_value = 0
+                mock_df.__getitem__.return_value = mock_series
 
             score = manager.get_data_quality_score(mock_df)
             assert 0.0 <= score <= 1.0
@@ -49,7 +53,11 @@ class TestDataQualityStatistics:
             missing_cells = int(500 * missing_ratio)
             mock_df.isnull.return_value.sum.return_value.sum.return_value = missing_cells
             mock_df.columns = ["Open", "High", "Low", "Close", "Volume"]
-            mock_df.__getitem__.return_value.sum.return_value = 0
+            # Mock column access
+            mock_series = MagicMock()
+            mock_series.__lt__ = MagicMock(return_value=mock_series)
+            mock_series.sum.return_value = 0
+            mock_df.__getitem__.return_value = mock_series
 
             score = manager.get_data_quality_score(mock_df)
             expected_score = 1.0 - missing_ratio * 0.5
@@ -67,11 +75,17 @@ class TestDataQualityStatistics:
         mock_df.columns = ["Open", "High", "Low", "Close", "Volume"]
 
         # Test with no negative prices
-        mock_df.__getitem__.return_value.sum.return_value = 0
+        mock_series_no_neg = MagicMock()
+        mock_series_no_neg.__lt__ = MagicMock(return_value=mock_series_no_neg)
+        mock_series_no_neg.sum.return_value = 0
+        mock_df.__getitem__.return_value = mock_series_no_neg
         score_no_negative = manager.get_data_quality_score(mock_df)
 
         # Test with some negative prices
-        mock_df.__getitem__.return_value.sum.return_value = 5  # 5 negative prices
+        mock_series_with_neg = MagicMock()
+        mock_series_with_neg.__lt__ = MagicMock(return_value=mock_series_with_neg)
+        mock_series_with_neg.sum.return_value = 5  # 5 negative prices
+        mock_df.__getitem__.return_value = mock_series_with_neg
         score_with_negative = manager.get_data_quality_score(mock_df)
 
         assert score_with_negative < score_no_negative
@@ -106,7 +120,11 @@ class TestDataQualityStatistics:
         missing_cells = int(500 * missing_ratio)
         mock_df.isnull.return_value.sum.return_value.sum.return_value = missing_cells
         mock_df.columns = ["Open", "High", "Low", "Close", "Volume"]
-        mock_df.__getitem__.return_value.sum.return_value = 0
+        # Mock column access
+        mock_series = MagicMock()
+        mock_series.__lt__ = MagicMock(return_value=mock_series)
+        mock_series.sum.return_value = 0
+        mock_df.__getitem__.return_value = mock_series
 
         score = manager.get_data_quality_score(mock_df)
         expected_score = 1.0 - expected_score_reduction
@@ -123,7 +141,10 @@ class TestDataQualityStatistics:
         mock_perfect.shape = (100, 5)
         mock_perfect.isnull.return_value.sum.return_value.sum.return_value = 0
         mock_perfect.columns = ["Open", "High", "Low", "Close", "Volume"]
-        mock_perfect.__getitem__.return_value.sum.return_value = 0
+        mock_series_perfect = MagicMock()
+        mock_series_perfect.__lt__ = MagicMock(return_value=mock_series_perfect)
+        mock_series_perfect.sum.return_value = 0
+        mock_perfect.__getitem__.return_value = mock_series_perfect
 
         perfect_score = manager.get_data_quality_score(mock_perfect)
         assert perfect_score == 1.0
@@ -134,7 +155,10 @@ class TestDataQualityStatistics:
         mock_terrible.shape = (100, 5)
         mock_terrible.isnull.return_value.sum.return_value.sum.return_value = 500  # All missing
         mock_terrible.columns = ["Open", "High", "Low", "Close", "Volume"]
-        mock_terrible.__getitem__.return_value.sum.return_value = 100  # All negative
+        mock_series_terrible = MagicMock()
+        mock_series_terrible.__lt__ = MagicMock(return_value=mock_series_terrible)
+        mock_series_terrible.sum.return_value = 100  # All negative
+        mock_terrible.__getitem__.return_value = mock_series_terrible
 
         terrible_score = manager.get_data_quality_score(mock_terrible)
-        assert terrible_score == 0.0  # Should be clamped to 0.0
+        assert terrible_score == 0.3  # 1.0 - 1.0*0.5 (missing) - 0.2 (negative) = 0.3

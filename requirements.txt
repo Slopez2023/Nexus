@@ -3,8 +3,17 @@ flake8
 mypy
 pytest
 pytest-cov
+pytest-asyncio
 pandas
 requests
 aiohttp
 yfinance
 polygon-api-client
+numpy
+fastapi
+uvicorn
+redis
+psycopg2-binary
+psutil
+pydantic
+python-dotenv

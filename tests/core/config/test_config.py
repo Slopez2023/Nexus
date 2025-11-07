@@ -70,7 +70,7 @@ class TestConfigManager(unittest.TestCase):
         manager.set("test_key", "test_value")
 
         self.assertEqual(manager.get("test_key"), "test_value")
-        self.assertmanager.get("missing_key") is None
+        self.assertIsNone(manager.get("missing_key"))
         self.assertEqual(manager.get("missing_key", "default"), "default")
 
     def test_set_config_value(self):
@@ -89,7 +89,7 @@ class TestConfigManager(unittest.TestCase):
             manager.set("test_key", "test_value")
             manager.save_config()
 
-            self.assertconfig_file.exists()
+            self.assertTrue(config_file.exists())
             with open(config_file, "r") as f:
                 saved_config = json.load(f)
                 self.assertEqual(saved_config["test_key"], "test_value")
@@ -103,8 +103,8 @@ class TestConfigManager(unittest.TestCase):
             manager.set("key", "value")
             manager.save_config()
 
-            self.assertconfig_file.exists()
-            self.assertconfig_file.parent.exists()
+            self.assertTrue(config_file.exists())
+            self.assertTrue(config_file.parent.exists())
 
     def test_validate_config_valid(self):
         """Test config validation with valid config."""
