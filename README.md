@@ -4,7 +4,8 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://python.org)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://github.com/yourusername/nexus/workflows/Tests/badge.svg)](https://github.com/yourusername/nexus/actions)
+[![CI](https://github.com/Slopez2023/Nexus/workflows/CI/badge.svg)](https://github.com/Slopez2023/Nexus/actions)
+[![Python Versions](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-blue)](https://python.org)
 
 ## 🚀 Quick Start
 
@@ -85,16 +86,41 @@ NEXUS/
 
 ## 🧪 Development
 
+### 📚 Development Guide
+For comprehensive development instructions, testing procedures, and maintenance guidelines, see:
+- **[Development Guide](docs/DEVELOPMENT_GUIDE.md)** - Complete setup, testing, and deployment instructions
+- **[Phase 1 Implementation](docs/PHASE1_IMPLEMENTATION.md)** - Current implementation details
+- **[Roadmap](docs/ROADMAP.md)** - Development roadmap and milestones
+
 ### Running Tests
 ```bash
-# Run all tests
-pytest
+# Quick test verification (CI-compatible)
+python -c "
+import unittest
+import sys, os
+sys.path.insert(0, os.getcwd())
 
-# Run with coverage
-pytest --cov=nexus --cov-report=html
+from tests.core.test_exceptions import TestNexusError
+from tests.core.test_logging import TestSetupLogging
+from tests.core.config.test_config import TestConfigManager
 
-# Run specific test
-pytest tests/test_strategy.py::TestSimpleRSI::test_signal_generation
+suite = unittest.TestSuite()
+suite.addTest(TestNexusError('test_nexus_error_inheritance'))
+suite.addTest(TestSetupLogging('test_setup_logging_basic'))
+suite.addTest(TestConfigManager('test_init_default_config_file'))
+
+runner = unittest.TextTestRunner(verbosity=2)
+result = runner.run(suite)
+print('✅ All tests passed' if result.wasSuccessful() else '❌ Tests failed')
+"
+
+# Full test suite (requires pytest)
+pytest tests/ -v
+
+# Code quality checks
+flake8 nexus/ tests/
+mypy nexus/ --ignore-missing-imports
+black --check nexus/ tests/
 ```
 
 ### Code Quality

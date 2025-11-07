@@ -59,7 +59,7 @@ class TestConfigManager(unittest.TestCase):
 
         try:
             manager = ConfigManager(config_file)
-            with pytest.raises(ConfigurationError):
+            with self.assertRaises(ConfigurationError):
                 manager.load_config()
         finally:
             Path(config_file).unlink()
@@ -118,5 +118,5 @@ class TestConfigManager(unittest.TestCase):
         manager = ConfigManager()
         manager._config = {"database": {"port": "invalid"}}
 
-        with pytest.raises(ConfigurationError):
+        with self.assertRaises(ConfigurationError):
             manager._validate_config()
