@@ -1,1 +1,1 @@
-# Tests for strategies modules
+"""Tests for strategy framework."""
