@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Core Infrastructure &#8212; NEXUS 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <script src="../_static/documentation_options.js?v=01f34227"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Trading Strategies" href="strategies.html" />
+    <link rel="prev" title="NEXUS AI Trading System" href="../index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="core-infrastructure">
+<h1>Core Infrastructure<a class="headerlink" href="#core-infrastructure" title="Link to this heading">¶</a></h1>
+<p>The core module provides fundamental infrastructure components used throughout NEXUS.</p>
+<section id="module-nexus.core.logging">
+<span id="logging"></span><h2>Logging<a class="headerlink" href="#module-nexus.core.logging" title="Link to this heading">¶</a></h2>
+<p>Basic logging configuration for NEXUS.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="nexus.core.logging.setup_logging">
+<span class="sig-prename descclassname"><span class="pre">nexus.core.logging.</span></span><span class="sig-name descname"><span class="pre">setup_logging</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'nexus.log'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></span><a class="reference internal" href="../_modules/nexus/core/logging.html#setup_logging"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nexus.core.logging.setup_logging" title="Link to this definition">¶</a></dt>
+<dd><p>Set up basic logging configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>level</strong> – Logging level (e.g., logging.DEBUG, logging.INFO)</p></li>
+<li><p><strong>log_file</strong> – Path to log file</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="nexus.core.logging.get_logger">
+<span class="sig-prename descclassname"><span class="pre">nexus.core.logging.</span></span><span class="sig-name descname"><span class="pre">get_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.Logger" title="(in Python v3.14)"><span class="pre">Logger</span></a></span></span><a class="reference internal" href="../_modules/nexus/core/logging.html#get_logger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nexus.core.logging.get_logger" title="Link to this definition">¶</a></dt>
+<dd><p>Get a logger instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> – Logger name (usually __name__)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Configured logger instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-nexus.core.exceptions">
+<span id="exceptions"></span><h2>Exceptions<a class="headerlink" href="#module-nexus.core.exceptions" title="Link to this heading">¶</a></h2>
+<p>Custom exceptions for NEXUS system.</p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="nexus.core.exceptions.NexusError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nexus.core.exceptions.</span></span><span class="sig-name descname"><span class="pre">NexusError</span></span><a class="reference internal" href="../_modules/nexus/core/exceptions.html#NexusError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nexus.core.exceptions.NexusError" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></a></p>
+<p>Base exception for NEXUS system errors.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="nexus.core.exceptions.DataError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nexus.core.exceptions.</span></span><span class="sig-name descname"><span class="pre">DataError</span></span><a class="reference internal" href="../_modules/nexus/core/exceptions.html#DataError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nexus.core.exceptions.DataError" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#nexus.core.exceptions.NexusError" title="nexus.core.exceptions.NexusError"><code class="xref py py-class docutils literal notranslate"><span class="pre">NexusError</span></code></a></p>
+<p>Raised when there’s an issue with data fetching or validation.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="nexus.core.exceptions.ConfigurationError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nexus.core.exceptions.</span></span><span class="sig-name descname"><span class="pre">ConfigurationError</span></span><a class="reference internal" href="../_modules/nexus/core/exceptions.html#ConfigurationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nexus.core.exceptions.ConfigurationError" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#nexus.core.exceptions.NexusError" title="nexus.core.exceptions.NexusError"><code class="xref py py-class docutils literal notranslate"><span class="pre">NexusError</span></code></a></p>
+<p>Raised when there’s a configuration-related error.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="nexus.core.exceptions.StrategyError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nexus.core.exceptions.</span></span><span class="sig-name descname"><span class="pre">StrategyError</span></span><a class="reference internal" href="../_modules/nexus/core/exceptions.html#StrategyError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nexus.core.exceptions.StrategyError" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#nexus.core.exceptions.NexusError" title="nexus.core.exceptions.NexusError"><code class="xref py py-class docutils literal notranslate"><span class="pre">NexusError</span></code></a></p>
+<p>Raised when there’s an issue with strategy execution.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="nexus.core.exceptions.RiskError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nexus.core.exceptions.</span></span><span class="sig-name descname"><span class="pre">RiskError</span></span><a class="reference internal" href="../_modules/nexus/core/exceptions.html#RiskError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nexus.core.exceptions.RiskError" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#nexus.core.exceptions.NexusError" title="nexus.core.exceptions.NexusError"><code class="xref py py-class docutils literal notranslate"><span class="pre">NexusError</span></code></a></p>
+<p>Raised when risk limits are violated.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="nexus.core.exceptions.ExecutionError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nexus.core.exceptions.</span></span><span class="sig-name descname"><span class="pre">ExecutionError</span></span><a class="reference internal" href="../_modules/nexus/core/exceptions.html#ExecutionError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nexus.core.exceptions.ExecutionError" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#nexus.core.exceptions.NexusError" title="nexus.core.exceptions.NexusError"><code class="xref py py-class docutils literal notranslate"><span class="pre">NexusError</span></code></a></p>
+<p>Raised when trade execution fails.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="nexus.core.exceptions.ValidationError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nexus.core.exceptions.</span></span><span class="sig-name descname"><span class="pre">ValidationError</span></span><a class="reference internal" href="../_modules/nexus/core/exceptions.html#ValidationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nexus.core.exceptions.ValidationError" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#nexus.core.exceptions.NexusError" title="nexus.core.exceptions.NexusError"><code class="xref py py-class docutils literal notranslate"><span class="pre">NexusError</span></code></a></p>
+<p>Raised when data or input validation fails.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">NEXUS</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Core Infrastructure</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-nexus.core.logging">Logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-nexus.core.exceptions">Exceptions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="strategies.html">Trading Strategies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="backtesting.html">Backtesting Engine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="risk.html">Risk Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="monitoring.html">Performance Monitoring</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agents.html">AI Agents</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../index.html" title="previous chapter">NEXUS AI Trading System</a></li>
+      <li>Next: <a href="strategies.html" title="next chapter">Trading Strategies</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, NEXUS Team.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../_sources/api/core.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
