@@ -16,6 +16,16 @@
 
 **🏛️ INVESTOR PERSPECTIVE:** Risk of ruin is real. Position sizing matters more than strategy. Have 6+ months living expenses saved. Start micro ($100-1000), scale only with consistent profits.
 
+## 🎯 End Product Vision
+
+**Local Trading System with Web Dashboard:**
+- **Core Engine:** Python application running automated strategies locally on Mac
+- **Database:** PostgreSQL for trades, performance, and market data
+- **Web Dashboard:** FastAPI backend + React/Vue frontend for monitoring
+- **Features:** Real-time P&L, risk metrics, strategy controls, trade history
+- **Safety:** Kill switches, position limits, comprehensive logging
+- **Deployment:** Local execution, optional cloud migration later
+
 ## 📊 Development Phases
 
 ### Phase -1: Prerequisites & Assessment (1-2 weeks)
@@ -39,10 +49,11 @@
 
 **Task -1.3: Technology Stack Decisions (LOCAL FOCUS)**
 - [ ] Data sources: yfinance (free), Alpha Vantage, Polygon, Bloomberg
-- [ ] Database: SQLite (local file-based, zero setup)
+- [ ] Database: PostgreSQL (local install, better for time series data)
 - [ ] Monitoring: Local log files + console output (scale to Grafana later)
 - [ ] Execution: Local Python processes (scale to Docker/cloud later)
-- [ ] Testing: pytest with local SQLite test database
+- [ ] Testing: pytest with local PostgreSQL test database
+- [ ] Web Dashboard: FastAPI + React/Vue for monitoring (Phase 3)
 
 ### Phase 0: Foundation & Documentation
 **Goal:** Establish SAFE project structure, documentation, and development environment
@@ -92,14 +103,15 @@
 - [ ] **QUANT ISSUE:** Implement statistical data quality tests
 
 **Task 1.2: Infrastructure Setup (LOCAL)**
+- [ ] Install and configure local PostgreSQL database
 - [ ] Set up local logging system (rotatable log files)
 - [ ] Create simple monitoring script (check data quality, system health)
-- [ ] Implement local SQLite database schema for trades/performance
+- [ ] Implement PostgreSQL database schema for trades/performance/time series
 - [ ] Set up basic alerting (email/console notifications)
-- [ ] Create backup scripts for local data
-- [ ] Set up local testing environment
-- [ ] **INFRA ISSUE:** Ensure reliable local execution
-- [ ] **COST CHECK:** Minimal (electricity only)
+- [ ] Create backup scripts for PostgreSQL data
+- [ ] Set up local testing environment with test database
+- [ ] **INFRA ISSUE:** Ensure reliable local PostgreSQL execution
+- [ ] **COST CHECK:** Minimal (electricity + optional PostgreSQL hosting)
 
 **Task 1.3: Configuration & Environment Management (LOCAL)**
 - [ ] Build ConfigManager with validation and type safety
@@ -208,12 +220,14 @@
 - [ ] **COST CHECK:** Execution fees acceptable ($1-10/trade)
 - [ ] **SAFETY CHECK:** Paper trading tests pass 100% before live
 
-**Task 3.3: Performance Monitoring**
+**Task 3.3: Performance Monitoring & Dashboard**
 - [ ] Build PerformanceMonitor for real-time tracking
 - [ ] Implement comprehensive P&L analysis
 - [ ] Create performance alerting and notification system
 - [ ] Build historical performance database
 - [ ] Generate automated performance reports
+- [ ] **WEB DASHBOARD:** Create FastAPI backend with React/Vue frontend
+- [ ] **DASHBOARD FEATURES:** Real-time P&L charts, risk metrics, trade log viewer
 - [ ] **VALIDATION:** Monitoring catches issues before they compound
 
 **Task 3.4: Multiple Strategy Support**
