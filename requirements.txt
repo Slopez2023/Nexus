@@ -3,3 +3,8 @@ flake8
 mypy
 pytest
 pytest-cov
+pandas
+requests
+aiohttp
+yfinance
+polygon-api-client
