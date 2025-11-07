@@ -8,11 +8,11 @@
 
 **🚨 PROFESSIONAL TRADER PERSPECTIVE:** 95% of retail traders lose money. This roadmap assumes you're experienced. If not, consider education first. Quant development requires: statistics, programming, market knowledge, risk management, and psychology.
 
-**🔧 FULL-STACK CONSIDERATIONS:** Need: data engineering (ETL, storage), ML engineering (model serving, MLOps), devops (CI/CD, monitoring), frontend (dashboards), backend (APIs, databases), and trading logic.
+**🔧 LOCAL MAC DEVELOPMENT:** Focus on core trading logic first. SQLite database, file-based logging, local execution. Scale to cloud later if profitable.
 
 **📊 QUANT PERSPECTIVE:** Avoid overfitting. Use proper statistical testing. Account for multiple hypothesis testing. Implement walk-forward optimization. Consider transaction costs in backtests.
 
-**💾 DATA EXPERT PERSPECTIVE:** Data quality > algorithms. Handle: survivorship bias, look-ahead bias, missing data, corporate actions, delisted securities, data vendor changes.
+**💾 DATA EXPERT PERSPECTIVE:** Data quality > algorithms. Start with yfinance (free), handle basic validation. Scale to paid sources if needed.
 
 **🏛️ INVESTOR PERSPECTIVE:** Risk of ruin is real. Position sizing matters more than strategy. Have 6+ months living expenses saved. Start micro ($100-1000), scale only with consistent profits.
 
@@ -37,12 +37,12 @@
 - [ ] Legal compliance check (tax implications, platform restrictions)
 - [ ] **GO/NO-GO:** Insufficient capital = paper trading only
 
-**Task -1.3: Technology Stack Decisions**
+**Task -1.3: Technology Stack Decisions (LOCAL FOCUS)**
 - [ ] Data sources: yfinance (free), Alpha Vantage, Polygon, Bloomberg
-- [ ] Cloud platform: AWS/GCP/Azure for reliability, or local for cost
-- [ ] Database: PostgreSQL for time series, Redis for caching
-- [ ] Monitoring: Prometheus/Grafana stack
-- [ ] CI/CD: GitHub Actions, Docker for reproducibility
+- [ ] Database: SQLite (local file-based, zero setup)
+- [ ] Monitoring: Local log files + console output (scale to Grafana later)
+- [ ] Execution: Local Python processes (scale to Docker/cloud later)
+- [ ] Testing: pytest with local SQLite test database
 
 ### Phase 0: Foundation & Documentation
 **Goal:** Establish SAFE project structure, documentation, and development environment
@@ -91,24 +91,24 @@
 - [ ] **VALIDATION:** 99.9% data quality over 90 days
 - [ ] **QUANT ISSUE:** Implement statistical data quality tests
 
-**Task 1.2: Infrastructure Setup**
-- [ ] Set up cloud infrastructure (AWS/GCP) or local monitoring stack
-- [ ] Implement comprehensive logging (structured, searchable, rotatable)
-- [ ] Set up monitoring dashboard (Grafana + Prometheus)
-- [ ] Create alerting system for system health and trading events
-- [ ] Implement backup and disaster recovery procedures
-- [ ] Set up CI/CD pipeline with automated testing
-- [ ] **INFRA ISSUE:** Ensure 99.9% uptime and <1min latency
-- [ ] **COST CHECK:** Infrastructure costs vs benefits
+**Task 1.2: Infrastructure Setup (LOCAL)**
+- [ ] Set up local logging system (rotatable log files)
+- [ ] Create simple monitoring script (check data quality, system health)
+- [ ] Implement local SQLite database schema for trades/performance
+- [ ] Set up basic alerting (email/console notifications)
+- [ ] Create backup scripts for local data
+- [ ] Set up local testing environment
+- [ ] **INFRA ISSUE:** Ensure reliable local execution
+- [ ] **COST CHECK:** Minimal (electricity only)
 
-**Task 1.3: Configuration & Environment Management**
+**Task 1.3: Configuration & Environment Management (LOCAL)**
 - [ ] Build ConfigManager with validation and type safety
-- [ ] Implement environment-specific configs (dev/staging/prod)
-- [ ] Add configuration hot-reloading without restarts
-- [ ] Create configuration audit logging
-- [ ] Implement secrets management (API keys, passwords)
-- [ ] **VALIDATION:** Config changes tested in staging first
-- [ ] **SECURITY ISSUE:** No hardcoded credentials
+- [ ] Create local config files (JSON/YAML) for settings
+- [ ] Add configuration loading and validation
+- [ ] Implement basic secrets handling (.env file)
+- [ ] Create config audit logging
+- [ ] **VALIDATION:** Config changes don't break functionality
+- [ ] **SECURITY ISSUE:** API keys in .env, not code
 
 **Task 1.4: Strategy Framework & Signal Processing**
 - [ ] Create BaseStrategy with clean interface and metadata
@@ -199,14 +199,14 @@
 - [ ] Build risk dashboard and real-time monitoring
 - [ ] **VALIDATION:** Risk system prevents all catastrophic scenarios
 
-**Task 3.2: Live Execution System** (HIGH RISK - TEST EXTENSIVELY)
-- [ ] Implement ExecutionEngine for order management
+**Task 3.2: Live Execution System (LOCAL SIMULATION FIRST)**
+- [ ] Implement ExecutionEngine for order management (Alpaca API)
 - [ ] Add market and limit order execution
 - [ ] Implement slippage protection and retry logic
 - [ ] Create position tracking and reconciliation
 - [ ] Add transaction cost optimization
-- [ ] **COST CHECK:** Execution fees acceptable
-- [ ] **SAFETY CHECK:** Mock trading tests pass 100% before live
+- [ ] **COST CHECK:** Execution fees acceptable ($1-10/trade)
+- [ ] **SAFETY CHECK:** Paper trading tests pass 100% before live
 
 **Task 3.3: Performance Monitoring**
 - [ ] Build PerformanceMonitor for real-time tracking
@@ -276,10 +276,10 @@
 - [ ] **VALIDATION:** Paper system mirrors live exactly
 
 **Task 5.2: Micro Live Deployment** (START WITH $100 MAX)
-- [ ] Implement live trading safety controls (kill switches, limits)
+- [ ] Implement live trading safety controls (local kill switches, limits)
 - [ ] Start with micro-position sizes (0.01% of capital = $1-10 per trade)
 - [ ] Add manual override and emergency stop capabilities
-- [ ] Create live performance monitoring dashboard
+- [ ] Create live performance monitoring (local dashboard/logs)
 - [ ] Establish daily review and adjustment procedures
 - [ ] **SAFETY CHECK:** 30 days micro-trading with no losses >1%
 
@@ -292,11 +292,11 @@
 - [ ] **GO/NO-GO:** Stop scaling if Sharpe <1.0
 
 **Task 5.4: Production Optimization** (ONLY AFTER 6+ MONTHS PROFITABLE)
-- [ ] Optimize system performance and latency
-- [ ] Implement high-availability architecture
+- [ ] Optimize system performance and latency (local optimizations)
+- [ ] Implement backup systems and data redundancy
 - [ ] Add comprehensive error handling and recovery
 - [ ] Create automated system maintenance procedures
-- [ ] Build institutional-grade audit trails
+- [ ] Build detailed audit trails and trade logs
 
 ## 🎯 Success Criteria (PROFESSIONAL MEASURES)
 
@@ -324,12 +324,12 @@
 - **Costs compound** - Commissions, spreads, taxes eat small edges
 - **Live markets differ** - Backtests are optimistic, paper trading bridges gap
 
-### Full-Stack Engineer Perspective
-- **Reliability engineering** - 99.9% uptime, monitoring, alerting
-- **Security by design** - No hardcoded credentials, secure API handling
-- **Scalability planning** - Design for growth, but don't over-engineer
-- **DevOps culture** - Infrastructure as code, automated deployment
-- **Maintainability** - Clean code, documentation, testing
+### Full-Stack Engineer Perspective (LOCAL FOCUS)
+- **Reliability engineering** - Stable local execution, error handling, logging
+- **Security by design** - No hardcoded credentials, .env files for secrets
+- **Scalability planning** - Design for cloud migration later, but start simple
+- **DevOps culture** - Local testing, git workflow, automated checks
+- **Maintainability** - Clean code, documentation, testing, modular design
 
 ### Investor Perspective
 - **Risk-adjusted returns** - Sharpe ratio >1.5 minimum
@@ -340,14 +340,14 @@
 
 ---
 
-**RED FLAGS TO ABANDON PROJECT (Non-Negotiable):**
+**RED FLAGS TO ABANDON PROJECT (LOCAL DEVELOPMENT):**
 - Phase -1 prerequisites not met (insufficient knowledge/capital)
-- Data quality issues persist after 90 days
+- Data quality issues persist after 30 days
 - Phase 2 strategy not statistically significant (p > 0.05)
 - Paper trading shows >25% performance degradation
 - Any live loss >2% in first week (indicates system flaws)
-- Infrastructure downtime >0.1% or latency >30 seconds
-- AI agents increase risk metrics without improving returns
+- Local system crashes or data corruption issues
+- Strategy doesn't work across different market conditions
 
 **SUCCESS INDICATORS:**
 - Strategy survives 2008 crisis simulation
