@@ -2,38 +2,37 @@
 
 import json
 import tempfile
+import unittest
 from pathlib import Path
 from unittest.mock import patch
-
-import pytest
 
 from nexus.core.config import ConfigManager
 from nexus.core.exceptions import ConfigurationError
 
 
-class TestConfigManager:
+class TestConfigManager(unittest.TestCase):
     """Test the ConfigManager class."""
 
     def test_init_default_config_file(self):
         """Test ConfigManager initialization with default config file."""
         manager = ConfigManager()
-        assert manager.config_file == "config.json"
-        assert manager._config == {}
+        self.assertEqual(manager.config_file, "config.json")
+        self.assertEqual(manager._config, {})
 
     def test_init_custom_config_file(self):
         """Test ConfigManager initialization with custom config file."""
         manager = ConfigManager("custom.json")
-        assert manager.config_file == "custom.json"
+        self.assertEqual(manager.config_file, "custom.json")
 
     def test_load_config_defaults_when_no_file(self):
         """Test loading default config when file doesn't exist."""
         manager = ConfigManager("nonexistent.json")
         config = manager.load_config()
 
-        assert "database" in config
-        assert "logging" in config
-        assert "risk" in config
-        assert config["database"]["port"] == 5432
+        self.assertIn("database", config)
+        self.assertIn("logging", config)
+        self.assertIn("risk", config)
+        self.assertEqual(config["database"]["port"], 5432)
 
     def test_load_config_from_file(self):
         """Test loading config from JSON file."""
@@ -47,8 +46,8 @@ class TestConfigManager:
             manager = ConfigManager(config_file)
             config = manager.load_config()
 
-            assert config["test_key"] == "test_value"
-            assert config["number"] == 42
+            self.assertEqual(config["test_key"], "test_value")
+            self.assertEqual(config["number"], 42)
         finally:
             Path(config_file).unlink()
 
@@ -70,16 +69,16 @@ class TestConfigManager:
         manager = ConfigManager()
         manager.set("test_key", "test_value")
 
-        assert manager.get("test_key") == "test_value"
-        assert manager.get("missing_key") is None
-        assert manager.get("missing_key", "default") == "default"
+        self.assertEqual(manager.get("test_key"), "test_value")
+        self.assertmanager.get("missing_key") is None
+        self.assertEqual(manager.get("missing_key", "default"), "default")
 
     def test_set_config_value(self):
         """Test setting configuration values."""
         manager = ConfigManager()
         manager.set("test_key", "test_value")
 
-        assert manager._config["test_key"] == "test_value"
+        self.assertEqual(manager._config["test_key"], "test_value")
 
     def test_save_config(self):
         """Test saving configuration to file."""
@@ -90,10 +89,10 @@ class TestConfigManager:
             manager.set("test_key", "test_value")
             manager.save_config()
 
-            assert config_file.exists()
+            self.assertconfig_file.exists()
             with open(config_file, "r") as f:
                 saved_config = json.load(f)
-                assert saved_config["test_key"] == "test_value"
+                self.assertEqual(saved_config["test_key"], "test_value")
 
     def test_save_config_creates_directory(self):
         """Test that save_config creates parent directories."""
@@ -104,8 +103,8 @@ class TestConfigManager:
             manager.set("key", "value")
             manager.save_config()
 
-            assert config_file.exists()
-            assert config_file.parent.exists()
+            self.assertconfig_file.exists()
+            self.assertconfig_file.parent.exists()
 
     def test_validate_config_valid(self):
         """Test config validation with valid config."""
