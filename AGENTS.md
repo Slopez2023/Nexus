@@ -9,6 +9,46 @@
 - **Type check**: `mypy nexus/ --ignore-missing-imports`
 - **Docs**: `sphinx-build docs/ docs/_build/html`
 
+## 🔧 Git Standards
+**Purpose**: Professional version control practices for maintainable, collaborative development.
+
+### Branching Strategy
+- **`main`**: Production-ready code, always deployable
+- **`feature/*`**: New features (e.g., `feature/rsi-strategy`)
+- **`bugfix/*`**: Bug fixes (e.g., `bugfix/data-pipeline`)
+- **`hotfix/*`**: Critical production fixes
+
+### Commit Standards
+- **Format**: `type(scope): description`
+- **Types**: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
+- **Examples**:
+  - `feat(strategy): add RSI divergence detector`
+  - `fix(data): resolve null handling in market data`
+  - `docs(api): update risk management documentation`
+- **Rules**:
+  - Use imperative mood ("add" not "added")
+  - Keep under 72 characters
+  - Reference issues: `fix: resolve #123`
+
+### Pull Request Guidelines
+- **Title**: Clear, descriptive summary
+- **Description**: What, why, how
+- **Testing**: Include test coverage for changes
+- **Checklist**:
+  - [ ] Code follows style guidelines
+  - [ ] Tests pass locally
+  - [ ] Documentation updated
+  - [ ] No breaking changes without discussion
+
+### Code Review Process
+- **Self-review**: Test and lint before requesting review
+- **Review criteria**:
+  - Code correctness and efficiency
+  - Test coverage and quality
+  - Documentation completeness
+  - Adherence to architecture decisions
+- **Merge requirements**: At least one approval, all CI checks pass
+
 ## 🏗️ Architecture
 - **nexus/core/**: Data pipeline, execution, configuration
 - **nexus/strategies/**: Trading strategy implementations
@@ -49,6 +89,7 @@
 **Purpose**: Defines development and interaction processes.
 
 - **Task Tracking**: Use ROADMAP.md checklists for progress
+- **Git Workflow**: Follow Git Standards for branching, commits, and PRs
 - **Code Reviews**: Self-review against Code Style before commits
 - **Testing**: Run full test suite before any merge
 - **Documentation**: Update docs immediately after architectural changes
