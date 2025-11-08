@@ -336,9 +336,6 @@ def get_database_manager(config: Optional[DatabaseConfig] = None) -> DatabaseMan
     return _db_manager
 
 def init_database() -> DatabaseManager:
-    """Initialize database with default configuration."""
-    # Set password from environment or use default for development
-    os.environ.setdefault("DB_PASSWORD", "nexus_secure_2024!")
-
-    config = DatabaseConfig.from_env()
-    return get_database_manager(config)
+"""Initialize database with default configuration."""
+config = DatabaseConfig.from_env()
+return get_database_manager(config)

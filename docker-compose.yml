@@ -9,7 +9,7 @@ services:
     environment:
       POSTGRES_DB: nexus_trading
       POSTGRES_USER: nexus_user
-      POSTGRES_PASSWORD: nexus_secure_2024!
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -51,7 +51,7 @@ services:
   #       condition: service_healthy
   #   environment:
   #     - DB_HOST=postgres
-  #     - DB_PASSWORD=nexus_secure_2024!
+  #     - DB_PASSWORD=${DB_PASSWORD}
   #     - REDIS_URL=redis://redis:6379
   #   volumes:
   #     - .:/app
