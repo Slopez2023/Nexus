@@ -19,6 +19,7 @@ from .models import (
 from .simulator import PortfolioSimulator
 from .costs import TransactionCostModel
 from .analyzer import PerformanceAnalyzer
+from ..core.data.data import DataManager
 
 logger = logging.getLogger(__name__)
 
@@ -106,19 +107,24 @@ class BacktestEngine:
         self.portfolio_simulator = PortfolioSimulator(config)
         self.cost_model = TransactionCostModel(config.transaction_costs)
         self.performance_analyzer = PerformanceAnalyzer()
+        self.data_manager = DataManager()
 
         # Execution tracking
         self.execution_start_time = None
         self.warnings = []
+        self.data_source = None  # Track which data source was used
 
         logger.info(f"Initialized backtest engine: {config.start_date} to {config.end_date}")
 
-    def run_backtest(self, strategy: BaseStrategy, market_data: pd.DataFrame) -> BacktestResult:
+    def run_backtest(self, strategy: BaseStrategy, market_data: Optional[pd.DataFrame] = None,
+                     symbol: Optional[str] = None, timeframe: Optional[str] = None) -> BacktestResult:
         """Run complete backtest.
 
         Args:
             strategy: Trading strategy to test
-            market_data: Historical market data (OHLCV)
+            market_data: Historical market data (OHLCV). If None, loads from {symbol}-*.csv
+            symbol: Asset symbol (e.g., 'BTC', 'ETH') - required if market_data is None
+            timeframe: Timeframe hint (e.g., '1d', '4h') - used for data lookup
 
         Returns:
             BacktestResult: Complete backtest results
@@ -127,6 +133,10 @@ class BacktestEngine:
         logger.info(f"Starting backtest for strategy: {strategy.__class__.__name__}")
 
         try:
+            # Load data if not provided
+            if market_data is None:
+                market_data = self._load_market_data(symbol, timeframe)
+
             # Validate inputs
             self._validate_inputs(strategy, market_data)
 
@@ -167,6 +177,46 @@ class BacktestEngine:
         except Exception as e:
             logger.error(f"Backtest failed: {e}")
             raise
+
+    def _load_market_data(self, symbol: Optional[str], timeframe: Optional[str]) -> pd.DataFrame:
+        """Load market data using DataManager (tries local CSVs first).
+        
+        Args:
+            symbol: Asset symbol (required)
+            timeframe: Timeframe hint (optional, for logging)
+            
+        Returns:
+            DataFrame with OHLCV data indexed by date
+        """
+        if not symbol:
+            raise ValueError("symbol is required when market_data is not provided")
+        
+        logger.info(f"Loading data for {symbol} {timeframe or 'any timeframe'} via DataManager")
+        
+        try:
+            # Use DataManager to fetch (LocalOHLCVDataSource will be tried first)
+            df = self.data_manager.fetch_historical_data(
+                symbol=symbol,
+                start_date=self.config.start_date.strftime("%Y-%m-%d"),
+                end_date=self.config.end_date.strftime("%Y-%m-%d")
+            )
+            
+            if df.empty:
+                raise ValueError(f"No data found for {symbol}")
+            
+            # Normalize column names to lowercase for consistency
+            df.columns = [col.lower() for col in df.columns]
+            
+            # Track data source
+            self.data_source = symbol
+            
+            logger.info(f"Loaded {len(df)} rows for {symbol}: {df.index.min()} to {df.index.max()}")
+            
+            return df
+            
+        except Exception as e:
+            logger.error(f"Failed to load data for {symbol}: {e}")
+            raise ValueError(f"Data loading failed for {symbol}: {e}")
 
     def _validate_inputs(self, strategy: BaseStrategy, market_data: pd.DataFrame) -> None:
         """Validate strategy and market data inputs."""

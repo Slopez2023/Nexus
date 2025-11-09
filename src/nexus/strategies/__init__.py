@@ -36,9 +36,11 @@ from .base import (
 )
 from .factory import StrategyFactory
 from .momentum import MomentumStrategy
+from .intraday_momentum import IntradayMomentumStrategy
 
 # Register strategies
 StrategyFactory.register(MomentumStrategy)
+StrategyFactory.register(IntradayMomentumStrategy)
 
 __all__ = [
     "BaseStrategy",
@@ -52,4 +54,5 @@ __all__ = [
     "ValidationError",
     "StrategyFactory",
     "MomentumStrategy",
+    "IntradayMomentumStrategy",
 ]

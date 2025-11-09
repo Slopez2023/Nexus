@@ -230,8 +230,7 @@ NEXUS/
 
 ### 📚 Development Guide
 For comprehensive development instructions, testing procedures, and maintenance guidelines, see:
-- **[Development Guide](docs/DEVELOPMENT_GUIDE.md)** - Complete setup, testing, and deployment instructions
-- **[Phase 1 Implementation](docs/PHASE1_IMPLEMENTATION.md)** - Current implementation details
+- **[Contributing Guide](docs/CONTRIBUTING.md)** - Development workflow, code standards, and testing
 - **[Roadmap](docs/ROADMAP.md)** - Development roadmap and milestones
 
 ### Running Tests

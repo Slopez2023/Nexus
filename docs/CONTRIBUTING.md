@@ -101,7 +101,7 @@ git checkout -b bugfix/issue-number-description
 ```
 
 ### 3. Make Changes
-- Write clean, well-tested code following our [style guidelines](STYLE.md)
+- Write clean, well-tested code following our [code standards](#-code-standards)
 - Add tests for new functionality
 - Update documentation as needed
 - Commit regularly with clear messages
