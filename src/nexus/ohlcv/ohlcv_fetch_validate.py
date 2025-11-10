@@ -88,7 +88,8 @@ class Config:
     # Strict mode: fail on any validation issue
     strict: bool = True
 
-    # Outlier threshold relative change vs previous close (e.g., 0.30 = 30%)
+    # Outlier threshold (deprecated: now uses adaptive rolling volatility 3σ bands)
+    # Kept for backwards compatibility but no longer used in validation
     outlier_threshold: float = 0.30
 
     # Exchange sanity check bounds for BTC (approx historical ranges)
@@ -248,6 +249,16 @@ TF_TO_SECONDS = {
 def week_candles(timeframe: str) -> int:
     s = TF_TO_SECONDS[timeframe]
     return int(round(7 * 86400 / s))
+
+
+def _rolling_window_for_timeframe(timeframe: str) -> int:
+    """
+    Compute rolling window size for volatility calculation based on timeframe.
+    Aims for ~30 days of data (appropriate for outlier detection across regimes).
+    """
+    s = TF_TO_SECONDS[timeframe]
+    candles_per_day = 86400 / s
+    return max(20, int(30 * candles_per_day))  # At least 20, typically 30 days
 
 
 def to_tz_aware_utc(dt: datetime) -> datetime:
@@ -1157,13 +1168,19 @@ def validate_df(df: pd.DataFrame, timeframe: str, start_dt: datetime, end_dt: da
     if df.index.duplicated().any():
         issues.append("Duplicate timestamps found")
 
-    # Outliers: >30% jump vs previous close
-    prev_close = df["close"].shift(1)
-    rel_change = (df["close"] - prev_close).abs() / prev_close
-    outlier_mask = (prev_close > 0) & (rel_change > cfg.outlier_threshold)
+    # Outliers: adaptive based on rolling volatility (3σ bands)
+    returns = df["close"].pct_change()
+    # Use rolling window appropriate to timeframe
+    window = _rolling_window_for_timeframe(timeframe)
+    rolling_vol = returns.rolling(window=window, min_periods=max(1, window//2)).std()
+    rolling_mean = returns.rolling(window=window, min_periods=max(1, window//2)).mean()
+    # 3σ threshold (allows ~99.7% of normal moves under Gaussian assumption)
+    threshold = rolling_mean.abs() + (3 * rolling_vol)
+    outlier_mask = (returns.abs() > threshold) & (returns.notna())
     if outlier_mask.any():
         first_idx = df.index[outlier_mask][0]
-        issues.append(f"Outlier jumps >{int(cfg.outlier_threshold*100)}% detected, first at {first_idx}")
+        first_ret = returns[outlier_mask].iloc[0]
+        issues.append(f"Outlier detected at {first_idx}: {first_ret*100:.2f}% move (outside 3σ band)")
 
     # Exchange consistency for BTC vs history
     if cfg.asset.upper() == "BTC":

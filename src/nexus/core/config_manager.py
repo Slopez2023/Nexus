@@ -38,6 +38,25 @@ class DatabaseConfig(BaseModel):
         return v
 
 
+class WarehouseAPIConfig(BaseModel):
+    """Warehouse API configuration."""
+
+    url: str = Field(default="http://localhost:8000", description="Warehouse API URL")
+    enabled: bool = Field(default=False, description="Enable Warehouse API")
+    primary: bool = Field(default=False, description="Use as primary data source")
+    timeout_seconds: int = Field(default=30, ge=5, le=300, description="Request timeout")
+    max_connections: int = Field(default=100, ge=1, description="Max HTTP connections")
+    retry_max_attempts: int = Field(default=3, ge=1, description="Max retry attempts")
+    retry_initial_backoff_ms: int = Field(default=100, ge=10, description="Initial backoff ms")
+    retry_max_backoff_ms: int = Field(default=30000, ge=1000, description="Max backoff ms")
+    circuit_breaker_failure_threshold: int = Field(
+        default=5, ge=1, description="Failures before circuit open"
+    )
+    circuit_breaker_timeout_seconds: int = Field(
+        default=60, ge=10, description="Circuit breaker timeout"
+    )
+
+
 class APIConfig(BaseModel):
     """External API configuration."""
 
@@ -45,6 +64,9 @@ class APIConfig(BaseModel):
     openrouter_key: Optional[str] = Field(default=None, description="OpenRouter API key")
     deepseek_key: Optional[str] = Field(default=None, description="DeepSeek API key")
     coingecko_key: Optional[str] = Field(default=None, description="CoinGecko API key")
+    warehouse_api: WarehouseAPIConfig = Field(
+        default_factory=WarehouseAPIConfig, description="Warehouse API configuration"
+    )
 
 
 class LoggingConfig(BaseModel):
@@ -183,6 +205,18 @@ class ConfigManager:
                 "openrouter_key": os.getenv("OPENROUTER_API_KEY"),
                 "deepseek_key": os.getenv("DEEPSEEK_API_KEY"),
                 "coingecko_key": os.getenv("COINGECKO_API_KEY"),
+                "warehouse_api": {
+                    "url": os.getenv("WAREHOUSE_API_URL", "http://localhost:8000"),
+                    "enabled": os.getenv("WAREHOUSE_API_ENABLED", "false").lower() == "true",
+                    "primary": os.getenv("WAREHOUSE_API_PRIMARY", "false").lower() == "true",
+                    "timeout_seconds": int(os.getenv("WAREHOUSE_API_TIMEOUT", "30")),
+                    "max_connections": int(os.getenv("WAREHOUSE_API_MAX_CONNECTIONS", "100")),
+                    "retry_max_attempts": int(os.getenv("WAREHOUSE_API_RETRY_ATTEMPTS", "3")),
+                    "retry_initial_backoff_ms": int(os.getenv("WAREHOUSE_API_RETRY_BACKOFF_MS", "100")),
+                    "retry_max_backoff_ms": int(os.getenv("WAREHOUSE_API_RETRY_MAX_BACKOFF_MS", "30000")),
+                    "circuit_breaker_failure_threshold": int(os.getenv("WAREHOUSE_API_CB_FAILURE_THRESHOLD", "5")),
+                    "circuit_breaker_timeout_seconds": int(os.getenv("WAREHOUSE_API_CB_TIMEOUT", "60")),
+                },
             },
             "logging": {
                 "level": os.getenv("LOG_LEVEL", "INFO"),
