@@ -61,6 +61,23 @@ class MarketDataAdapter:
         except (KeyError, IndexError):
             return 1000000  # Default volume
 
+    def get_spread(self, symbol: str) -> float:
+        """Get current bid-ask spread for symbol.
+        
+        Estimates spread from high-low range.
+        """
+        try:
+            symbol_data = self.data.xs(symbol, level='symbol') if 'symbol' in self.data.index.names else self.data
+            current_data = symbol_data.loc[self.current_date]
+            # Estimate spread as ~0.1% of price or based on high-low range
+            high = float(current_data['high'])
+            low = float(current_data['low'])
+            price = float(current_data['close'])
+            spread = (high - low) / 2 if (high - low) > 0 else price * 0.001
+            return spread
+        except (KeyError, IndexError):
+            return 0.0
+
     def get_historical_data(self, symbol: str, days: int) -> List[Dict[str, Any]]:
         """Get historical data for symbol."""
         try:

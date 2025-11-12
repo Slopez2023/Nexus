@@ -246,10 +246,10 @@ class WarehouseAPIClient:
         if not symbol:
             raise ValueError("Symbol is required")
 
-        endpoint = f"/api/v1/data/{symbol}"
+        endpoint = f"/api/v1/historical/{symbol}"
         params = {
-            "start_date": start_date,
-            "end_date": end_date,
+            "start": start_date,
+            "end": end_date,
             "timeframe": timeframe
         }
 
@@ -267,7 +267,7 @@ class WarehouseAPIClient:
         if not symbol:
             raise ValueError("Symbol is required")
 
-        endpoint = f"/api/v1/data/{symbol}/realtime"
+        endpoint = f"/api/v1/historical/{symbol}"
         return await self._request("GET", endpoint)
 
     async def get_health(self) -> APIResponse:
@@ -276,7 +276,7 @@ class WarehouseAPIClient:
         Returns:
             APIResponse with health status
         """
-        return await self._request("GET", "/api/v1/health")
+        return await self._request("GET", "/health")
 
     async def _request(
         self,

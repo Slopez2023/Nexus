@@ -71,6 +71,24 @@ class WarehouseAPIAdapter:
             # Convert to DataFrame
             df = pd.DataFrame(data_list)
 
+            # Normalize column names to uppercase (handle both uppercase and lowercase)
+            column_mapping = {
+                'open': 'Open',
+                'high': 'High', 
+                'low': 'Low',
+                'close': 'Close',
+                'volume': 'Volume',
+                'time': 'timestamp'
+            }
+            
+            new_columns = {}
+            for col in df.columns:
+                lower_col = col.lower()
+                if lower_col in column_mapping:
+                    new_columns[col] = column_mapping[lower_col]
+            
+            df = df.rename(columns=new_columns)
+            
             # Validate required columns
             required_cols = ["Open", "High", "Low", "Close", "Volume"]
             missing_cols = [col for col in required_cols if col not in df.columns]
@@ -86,16 +104,18 @@ class WarehouseAPIAdapter:
             else:
                 raise DataValidationError(f"Missing timestamp column for {symbol}")
 
-            # Ensure correct data types
+            # Ensure correct data types (only convert if not already numeric)
             for col in required_cols:
-                df[col] = pd.to_numeric(df[col], errors="coerce")
+                if col in df.columns:
+                    if not pd.api.types.is_numeric_dtype(df[col]):
+                        df[col] = pd.to_numeric(df[col], errors="coerce")
 
-            # Remove any rows with NaN values
+            # Remove any rows with NaN values in OHLCV columns only
             initial_len = len(df)
-            df = df.dropna()
+            df = df.dropna(subset=required_cols)
             if len(df) < initial_len:
                 self.logger.warning(
-                    f"Dropped {initial_len - len(df)} rows with NaN values for {symbol}"
+                    f"Dropped {initial_len - len(df)} rows with NaN in OHLCV columns for {symbol}"
                 )
 
             # Sort by timestamp

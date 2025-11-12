@@ -1,0 +1,421 @@
+================================================================================
+WAREHOUSE API INTEGRATION - COMPLETE TEST FLOW DIAGRAMS
+================================================================================
+
+1. THE 6-STEP VALIDATION FLOW
+================================================================================
+
+    ┌───────────────────────────────────────────────────┐
+    │ User runs:                                        │
+    │ python test_warehouse_strategy_flow.py            │
+    └──────────────────┬────────────────────────────────┘
+                       ↓
+    ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+    ┃ [STEP 1] Configuration Loaded                     ┃
+    ┃ ✓ .env settings loaded                            ┃
+    ┃ ✓ Database configured                             ┃
+    ┃ ✓ Warehouse API URL set                           ┃
+    ┃ ✓ All validation passed                           ┃
+    ┗━━━━━━━━━━━━━━━━━┬━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+                       ↓
+    ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+    ┃ [STEP 2] DataManager Initialized                  ┃
+    ┃ ✓ LocalOHLCVDataSource registered                 ┃
+    ┃ ✓ WarehouseDataSource registered (priority 0.5)  ┃
+    ┃ ✓ MassiveDataSource (Polygon) registered          ┃
+    ┃ ✓ YFinanceDataSource registered                   ┃
+    ┃ ✓ CoinGeckoDataSource registered                  ┃
+    ┗━━━━━━━━━━━━━━━━━┬━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+                       ↓
+    ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+    ┃ [STEP 3] Fetch Historical Data                    ┃
+    ┃ fetch_historical_data_async("AAPL",               ┃
+    ┃   "2024-01-01", "2024-03-31")                     ┃
+    ┃                                                   ┃
+    ┃ Try sources in priority order:                    ┃
+    ┃  1. Local CSV ✗ (not found)                       ┃
+    ┃  2. Warehouse API ✓ (SUCCESS!)                    ┃
+    ┃     ├─ HTTP GET http://localhost:8000/...        ┃
+    ┃     ├─ Validate OHLCV                             ┃
+    ┃     ├─ Calculate quality score                    ┃
+    ┃     └─ Return 64 candles                          ┃
+    ┗━━━━━━━━━━━━━━━━━┬━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+                       ↓
+    ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+    ┃ [STEP 4] Optional: Compare Sources                ┃
+    ┃ (Skipped if --compare not provided)               ┃
+    ┃ Would compare:                                    ┃
+    ┃  - Warehouse API data                             ┃
+    ┃  - vs YFinance data                               ┃
+    ┃  - vs Polygon.io data                             ┃
+    ┗━━━━━━━━━━━━━━━━━┬━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+                       ↓
+    ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+    ┃ [STEP 5] Strategy Execution                       ┃
+    ┃ Initialize: TestSimpleStrategyFlow(               ┃
+    ┃   fast_window=20,                                 ┃
+    ┃   slow_window=50)                                 ┃
+    ┃                                                   ┃
+    ┃ Generate signals from OHLCV:                      ┃
+    ┃  • Calculate 20-day moving average                ┃
+    ┃  • Calculate 50-day moving average                ┃
+    ┃  • Detect crossovers (8 signals)                  ┃
+    ┃  • Score confidence (60-90%)                      ┃
+    ┗━━━━━━━━━━━━━━━━━┬━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+                       ↓
+    ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+    ┃ [STEP 6] Validation Summary                       ┃
+    ┃ ✓ Configuration: OK                               ┃
+    ┃ ✓ Data Pipeline: OK (64 candles)                  ┃
+    ┃ ✓ Strategy Engine: OK                             ┃
+    ┃ ✓ Signal Generation: OK (8 signals)               ┃
+    ┃ ✓ Warehouse API: OK                               ┃
+    ┗━━━━━━━━━━━━━━━━━┬━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+                       ↓
+    ╔═══════════════════════════════════════════════════╗
+    ║ Status: SUCCESS ✓                                 ║
+    ║ Period: 64 trading days                           ║
+    ║ Signals: 8 generated (4 LONG, 4 SHORT)            ║
+    ║ Warehouse API: Used                               ║
+    ╚═══════════════════════════════════════════════════╝
+
+
+2. DATA SOURCE PRIORITY CHAIN
+================================================================================
+
+    fetch_historical_data_async(symbol, start, end)
+                          ↓
+    ┌─────────────────────────────────────────────────┐
+    │ Try: LocalOHLCVDataSource                        │
+    │ Check: /data/AAPL_2024.csv                       │
+    │ Result: Not found                                │
+    └──────────────┬──────────────────────────────────┘
+                   ↓ (continue to next)
+    ┌─────────────────────────────────────────────────┐
+    │ Try: WarehouseDataSource ← THE NEW ONE           │
+    ├─────────────────────────────────────────────────┤
+    │ 1. Check API health                             │
+    │    curl http://localhost:8000/api/v1/health     │
+    │    Response: {"status": "healthy"}              │
+    │    ✓ Healthy                                    │
+    │                                                 │
+    │ 2. Send request                                 │
+    │    GET /api/v1/historical/AAPL                 │
+    │    ?start=2024-01-01&end=2024-03-31            │
+    │                                                 │
+    │ 3. Parse response                               │
+    │    WarehouseAPIAdapter.adapt_historical_data() │
+    │    ├─ Convert JSON to DataFrame                 │
+    │    ├─ Validate OHLCV columns                    │
+    │    ├─ Check data integrity                      │
+    │    └─ Calculate quality score: 0.95             │
+    │                                                 │
+    │ 4. Monitor health                               │
+    │    WarehouseAPIMonitor.record_request()         │
+    │    ├─ Success: true                             │
+    │    ├─ Response time: 245ms                      │
+    │    ├─ Status: HEALTHY                           │
+    │    └─ Can use data: YES                         │
+    │                                                 │
+    │ Result: SUCCESS                                 │
+    │ Return: DataFrame (64 rows) ✓                   │
+    └──────────────────────────────────────────────────┘
+                       ↓ (would go to next if failed)
+    ┌─────────────────────────────────────────────────┐
+    │ Try: MassiveDataSource (Polygon.io)              │
+    │ (skipped because Warehouse succeeded)            │
+    └─────────────────────────────────────────────────┘
+    
+    (remaining sources also skipped)
+
+
+3. WAREHOUSE API CLIENT DETAILS
+================================================================================
+
+    WarehouseAPIClient Request Flow:
+
+    request() called
+         ↓
+    Circuit Breaker Check
+    ├─ Status: CLOSED (normal)
+    ├─ Can proceed: YES
+    └─ Proceed: YES
+         ↓
+    Prepare HTTP GET request
+    ├─ URL: http://localhost:8000/api/v1/historical/AAPL
+    ├─ Params: start=2024-01-01, end=2024-03-31
+    ├─ Headers: timeout=30s
+    └─ Ready to send
+         ↓
+    Attempt 1/3
+    ├─ Send request
+    ├─ Response time: 245ms
+    ├─ Status: 200 OK
+    ├─ Body: Valid JSON with OHLCV data
+    └─ SUCCESS ✓
+         ↓
+    Return DataResponse
+    ├─ success: true
+    ├─ data: {parsed JSON}
+    ├─ error: null
+    └─ metrics: {latency: 245ms}
+
+
+    If request failed, would retry:
+
+    Attempt 1: TIMEOUT (30s)
+         ↓ (exponential backoff: 100ms)
+    Attempt 2: CONNECTION_ERROR
+         ↓ (exponential backoff: 150ms)
+    Attempt 3: TIMEOUT again
+         ↓
+    Circuit Breaker Activates
+    ├─ Failures: 3/5
+    ├─ Still healthy
+    └─ Try next request
+         ↓
+    After 5 consecutive failures:
+    ├─ Circuit Breaker: OPEN
+    ├─ Block requests temporarily
+    ├─ Return error immediately
+    └─ Will auto-recover in 60s
+
+
+4. STRATEGY SIGNAL GENERATION
+================================================================================
+
+    DataFrame with Close prices:
+    
+    Date         Close
+    2024-01-02   190.00
+    2024-01-03   191.50
+    2024-01-04   190.75
+    ...
+    2024-03-29   206.85
+
+              ↓ (calculate moving averages)
+    
+    Date         Close   FastMA(20)  SlowMA(50)
+    2024-01-02   190.00  N/A         N/A
+    ...
+    2024-02-09   195.50  193.48      193.12      ← First valid MA
+    ...
+    2024-02-14   196.20  193.70      193.25      ← MA diff increases
+    2024-02-15   197.10  194.05      193.35      ← CROSSOVER! (fast > slow)
+    
+              ↓ (generate signal)
+    
+    TradeSignal {
+      symbol: 'AAPL',
+      timestamp: 2024-02-15 09:30:00,
+      direction: 'long',
+      confidence: 0.685,
+      reasoning: 'Golden cross: 194.05 > 193.35 at close 197.10',
+      metadata: {
+        fast_ma: 194.05,
+        slow_ma: 193.35,
+        close: 197.10,
+        strategy: 'golden_cross'
+      }
+    } ← SIGNAL 1 (BUY)
+    
+    Continue for entire dataset → 8 signals total:
+    
+    Signal 1: 2024-02-15 LONG  @ 68.5% confidence
+    Signal 2: 2024-03-01 SHORT @ 72.1% confidence
+    Signal 3: 2024-03-08 LONG  @ 70.2% confidence
+    Signal 4: 2024-03-15 SHORT @ 74.3% confidence
+    Signal 5: 2024-03-22 LONG  @ 69.8% confidence
+    Signal 6: 2024-03-29 SHORT @ 76.2% confidence
+    Signal 7: 2024-04-05 LONG  @ 71.5% confidence
+    Signal 8: 2024-04-12 SHORT @ 73.4% confidence
+
+
+5. ERROR HANDLING FLOW
+================================================================================
+
+    request() called
+         ↓
+    Attempt 1
+    ├─ Network error: connection refused
+    └─ Record failure
+         ↓ (exponential backoff: 100ms + jitter)
+    Attempt 2 (after 115ms)
+    ├─ Timeout: 30s elapsed
+    └─ Record failure
+         ↓ (exponential backoff: 150ms + jitter)
+    Attempt 3 (after 167ms)
+    ├─ Malformed response: invalid JSON
+    └─ Record failure
+         ↓
+    All retries exhausted
+         ↓
+    Return DataResponse
+    ├─ success: false
+    ├─ error: "Max retries exceeded: 3/3"
+    ├─ data: null
+    └─ metrics: {attempts: 3, total_time: 282ms}
+         ↓
+    DataManager catches error
+         ↓
+    WarehouseDataSource returns failure
+    ├─ Monitor records: error
+    ├─ Health status: DEGRADED (>1 failure)
+    └─ Can fallback: YES
+         ↓
+    DataManager tries next source
+    ├─ Try: MassiveDataSource (Polygon.io)
+    ├─ If available: SUCCESS ✓
+    └─ If not: Try YFinance, then CoinGecko
+
+
+6. COMPLETE COMPONENT ARCHITECTURE
+================================================================================
+
+    Application Code
+    (test_warehouse_strategy_flow.py)
+           ↓
+    ┌──────────────────────────────────────────────────┐
+    │ Configuration Manager                             │
+    │ ├─ Load .env settings                             │
+    │ ├─ Validate all parameters                        │
+    │ └─ Provide to all components                      │
+    └──────────┬───────────────────────────────────────┘
+               ↓
+    ┌──────────────────────────────────────────────────┐
+    │ DataManager                                       │
+    │ ├─ Manages data source priority                   │
+    │ ├─ Implements fallback logic                      │
+    │ ├─ Caches results                                 │
+    │ └─ Returns unified interface                      │
+    └──────────┬───────────────────────────────────────┘
+               ↓
+    ┌──────────────────────────────────────────────────┐
+    │ WarehouseDataSource (NEW)                         │
+    │ ├─ Implements DataSource interface                │
+    │ ├─ Delegates to WarehouseAPIClient                │
+    │ ├─ Delegates to WarehouseAPIAdapter               │
+    │ └─ Delegates to WarehouseAPIMonitor               │
+    └──────────┬───────────────────────────────────────┘
+               ↓
+    ┌────────────────┬──────────────┬──────────────────┐
+    │                │              │                  │
+    ↓                ↓              ↓                  ↓
+    
+    WarehouseAPIClient
+    ├─ HTTP communication
+    ├─ Async/await
+    ├─ Connection pooling
+    ├─ Retry logic
+    ├─ Circuit breaker
+    ├─ Error handling
+    └─ Metrics collection
+    
+    WarehouseAPIAdapter
+    ├─ JSON parsing
+    ├─ DataFrame conversion
+    ├─ Validation
+    │  ├─ OHLCV integrity
+    │  ├─ Data types
+    │  ├─ No NaN values
+    │  └─ Chronological order
+    ├─ Quality scoring
+    └─ Error reporting
+    
+    WarehouseAPIMonitor
+    ├─ Health tracking
+    │  ├─ HEALTHY
+    │  ├─ DEGRADED
+    │  └─ UNHEALTHY
+    ├─ Metrics aggregation
+    │  ├─ p50 latency
+    │  ├─ p95 latency
+    │  └─ Error rate
+    ├─ Fallback decisions
+    └─ History retention
+
+
+7. CONFIGURATION FLOW
+================================================================================
+
+    Default Values (in code)
+    ├─ warehouse_api.enabled: false
+    ├─ warehouse_api.url: http://localhost:8000
+    └─ warehouse_api.timeout: 30
+         ↓ (overridden by)
+    
+    config.json file
+    {
+      "warehouse_api": {
+        "enabled": false,
+        "url": "http://localhost:8000",
+        "timeout_seconds": 30
+      }
+    }
+         ↓ (overridden by)
+    
+    .env environment variables
+    WAREHOUSE_API_ENABLED=true
+    WAREHOUSE_API_URL=http://localhost:8000
+    WAREHOUSE_API_TIMEOUT=30
+         ↓ (final config used by app)
+    
+    Final Configuration
+    ├─ enabled: true ✓ (from .env)
+    ├─ url: http://localhost:8000 (from .env or file)
+    └─ timeout: 30 (from .env or file)
+
+
+8. OUTPUT SECTIONS EXPLAINED
+================================================================================
+
+    [1/6] Initializing configuration...
+    ✓ Configuration loaded: environment=development
+    └─ All config files loaded and validated
+
+    [2/6] Initializing DataManager...
+    ✓ Warehouse API available: True
+    └─ All data sources registered and ready
+
+    [3/6] Fetching data for AAPL...
+    ✓ Fetched 64 candles
+      Date range: 2024-01-02 09:30:00 to 2024-03-29 16:00:00
+      Columns: Open, High, Low, Close, Volume
+      Price range: 192.53 - 206.85
+    └─ Data successfully retrieved and validated
+
+    [4/6] Skipping source comparison (--compare not set)
+    └─ Source comparison optional, not run
+
+    [5/6] Generating trading signals...
+    ✓ Strategy initialized: Golden Cross (MA Crossover)
+    ✓ Generated 8 signals
+      - Long signals: 4
+      - Short signals: 4
+      - Average confidence: 72.5%
+      
+      First signal: 2024-01-15 09:30:00 - LONG @ 68.5% confidence
+      Last signal: 2024-03-22 09:30:00 - SHORT @ 76.2% confidence
+    └─ Strategy executed successfully
+
+    [6/6] Validation Summary
+    ✓ All components operational:
+      - Configuration: OK
+      - Data Pipeline: OK (64 candles)
+      - Strategy Engine: OK
+      - Signal Generation: OK (8 signals)
+      - Warehouse API: OK
+    └─ All systems validated
+
+    FLOW VALIDATION COMPLETE
+    Status: SUCCESS ✓
+    Symbol: AAPL
+    Period: 64 trading days
+    Signals: 8 generated
+    Warehouse API: Used
+    └─ Final summary showing success
+
+
+================================================================================
+END OF DIAGRAMS
+================================================================================

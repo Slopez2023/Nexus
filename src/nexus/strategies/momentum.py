@@ -273,47 +273,47 @@ class MomentumStrategy(BaseStrategy):
                 confidence = self._calculate_confidence(stock['momentum'], params['percentile'], True)
 
                 signal = TradeSignal(
-                        symbol=stock['symbol'],
-                        timestamp=timestamp,
-                        direction='long',
-                        confidence=confidence,
-                        reasoning=f"Momentum long: {stock['momentum']:.1%} return, RSI={stock['rsi']:.1f}",
-                        metadata={
-                            'strategy': 'momentum_rsi',
-                            'momentum_return': stock['momentum'],
-                            'rsi': stock['rsi'],
-                            'formation_period': params['formation_period_months'],
-                            'position_size': position_size,
-                            'max_portfolio_exposure': 0.05  # Max 5% per position
-                        }
-                    )
+                    symbol=stock['symbol'],
+                    timestamp=timestamp,
+                    direction='long',
+                    confidence=confidence,
+                    reasoning=f"Momentum long: {stock['momentum']:.1%} return, RSI={stock['rsi']:.1f}",
+                    metadata={
+                        'strategy': 'momentum_rsi',
+                        'momentum_return': stock['momentum'],
+                        'rsi': stock['rsi'],
+                        'formation_period': params['formation_period_months'],
+                        'position_size': position_size,
+                        'max_portfolio_exposure': 0.05  # Max 5% per position
+                    }
+                )
                 signals.append(signal)
 
-                # Generate short signals (bottom performers with RSI > oversold and negative momentum)
-                short_candidates = [s for s in stock_data[-num_positions:]
-                if s['rsi'] > params['rsi_oversold'] and s['momentum'] < -0.03]  # -3%+ decline
-                for stock in short_candidates[:params['max_positions']]:
-                    position_size = self._calculate_position_size(stock['price'])
-                    confidence = self._calculate_confidence(stock['momentum'], params['percentile'], False)
+            # Generate short signals (bottom performers with RSI > oversold and negative momentum)
+            short_candidates = [s for s in stock_data[-num_positions:]
+                               if s['rsi'] > params['rsi_oversold'] and s['momentum'] < -0.03]  # -3%+ decline
+            for stock in short_candidates[:params['max_positions']]:
+                position_size = self._calculate_position_size(stock['price'])
+                confidence = self._calculate_confidence(stock['momentum'], params['percentile'], False)
 
-                    signal = TradeSignal(
-                        symbol=stock['symbol'],
-                        timestamp=timestamp,
-                        direction='short',
-                        confidence=confidence,
-                        reasoning=f"Momentum short: {stock['momentum']:.1%} return, RSI={stock['rsi']:.1f}",
-                        metadata={
-                            'strategy': 'momentum_rsi',
-                            'momentum_return': stock['momentum'],
-                            'rsi': stock['rsi'],
-                            'formation_period': params['formation_period_months'],
-                            'position_size': position_size,
-                            'max_portfolio_exposure': 0.05  # Max 5% per position
-                        }
-                    )
-                    signals.append(signal)
+                signal = TradeSignal(
+                    symbol=stock['symbol'],
+                    timestamp=timestamp,
+                    direction='short',
+                    confidence=confidence,
+                    reasoning=f"Momentum short: {stock['momentum']:.1%} return, RSI={stock['rsi']:.1f}",
+                    metadata={
+                        'strategy': 'momentum_rsi',
+                        'momentum_return': stock['momentum'],
+                        'rsi': stock['rsi'],
+                        'formation_period': params['formation_period_months'],
+                        'position_size': position_size,
+                        'max_portfolio_exposure': 0.05  # Max 5% per position
+                    }
+                )
+                signals.append(signal)
 
-                return signals
+            return signals
 
         except Exception as e:
             self._logger.error(f"Momentum signal generation failed: {e}")

@@ -6,6 +6,7 @@ import numpy as np
 from datetime import datetime
 
 from nexus.backtesting import BacktestEngine, BacktestConfig, CostConfig, RiskLimits
+from nexus.backtesting.models import TradeSide
 from nexus.strategies import BaseStrategy, StrategyMetadata, ParameterSpec
 
 
@@ -13,8 +14,8 @@ class SimpleTestStrategy(BaseStrategy):
     """Simple test strategy for integration testing."""
 
     def __init__(self, buy_threshold=100.0, **kwargs):
-        super().__init__(**kwargs)
         self.buy_threshold = buy_threshold
+        super().__init__(buy_threshold=buy_threshold, **kwargs)
 
     def generate_signals(self, market_data):
         """Generate buy signals when price is below threshold."""
@@ -36,7 +37,8 @@ class SimpleTestStrategy(BaseStrategy):
         return []
 
     def validate_parameters(self):
-        return isinstance(self.buy_threshold, (int, float)) and self.buy_threshold > 0
+        threshold = self._parameters.get('buy_threshold', self.buy_threshold)
+        return isinstance(threshold, (int, float)) and threshold > 0
 
     @property
     def metadata(self):
@@ -189,7 +191,7 @@ class TestBacktestingIntegration:
         market_data = MockMarketData()
 
         # Calculate costs
-        cost = cost_model.calculate_trade_cost('TEST', 1000, 100.0, 'buy', market_data)
+        cost = cost_model.calculate_trade_cost('TEST', 1000, 100.0, TradeSide.BUY, market_data)
 
         # Costs should be reasonable
         assert cost.total > 0
@@ -233,6 +235,7 @@ class TestBacktestingIntegration:
     def test_risk_limits_enforcement(self, backtest_config):
         """Test that risk limits are properly enforced."""
         from nexus.backtesting import PortfolioSimulator
+        from nexus.backtesting.costs import TransactionCostModel
 
         # Create config with strict limits
         strict_config = BacktestConfig(
@@ -248,10 +251,16 @@ class TestBacktestingIntegration:
 
         simulator = PortfolioSimulator(strict_config)
 
+        # Create proper mock market data
+        class MockMarketData:
+            def get_price(self, symbol): return 10.0
+            def get_spread(self, symbol): return 0.1
+            def get_volume(self, symbol): return 10000
+
         # Test position size limit
         result = simulator.execute_trade('TEST', 1000, 10.0, datetime.now(),
                                        TransactionCostModel(CostConfig()),
-                                       type('Mock', (), {'get_price': lambda s: 10.0, 'get_spread': lambda s: 0.1, 'get_volume': lambda s: 10000})())
+                                       MockMarketData())
 
         # Should succeed (1000 * 10 = 10000, which is 100% of capital, but we allow it)
         assert result is not None
